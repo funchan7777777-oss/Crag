@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../access_trail/presentation/widgets/crag_image_backdrop.dart';
+import '../../../access_trail/presentation/widgets/crag_notice_dialog.dart';
 import '../../data/climby_social_store.dart';
 
 Future<void> openModerationScreen({
@@ -20,73 +21,10 @@ Future<void> showClimbyNotice({
   required String title,
   required String message,
 }) {
-  return showDialog<void>(
+  return showCragNoticeDialog(
     context: context,
-    builder: (context) {
-      return Dialog(
-        backgroundColor: const Color(0xFF121516),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/images/Knot.png',
-                width: 42,
-                height: 42,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 14),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  height: 1.35,
-                  letterSpacing: 0,
-                ),
-              ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFD6FF00),
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text(
-                    'OK',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
+    title: title,
+    message: message,
   );
 }
 

@@ -10,88 +10,102 @@ Future<void> showCragNoticeDialog({
     builder: (context) {
       return Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: const Color(0xFF101A19),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: const Color(0xFFD6FF00).withValues(alpha: 0.38),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.48),
-                blurRadius: 30,
-                offset: const Offset(0, 18),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+        child: CragPeakNoticeCard(
+          title: title,
+          message: message,
+          onContinue: () => Navigator.of(context).pop(),
+        ),
+      );
+    },
+  );
+}
+
+class CragPeakNoticeCard extends StatelessWidget {
+  const CragPeakNoticeCard({
+    required this.title,
+    required this.message,
+    required this.onContinue,
+    super.key,
+  });
+
+  final String title;
+  final String message;
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.clamp(240.0, 292.0);
+        return Center(
+          child: SizedBox(
+            width: width,
+            height: width * 1.27,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
               children: [
-                Row(
-                  children: [
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: Color(0xFFD6FF00),
-                        shape: BoxShape.circle,
-                      ),
-                      child: SizedBox(
-                        width: 34,
-                        height: 34,
-                        child: Icon(
-                          Icons.priority_high_rounded,
-                          size: 22,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  message,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.76),
-                    fontSize: 14,
-                    height: 1.4,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0,
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/images/Peak.png',
+                    fit: BoxFit.fill,
                   ),
                 ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFD6FF00),
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
+                Positioned(
+                  left: 34,
+                  right: 34,
+                  top: width * 0.35,
+                  bottom: width * 0.37,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF101516),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          message,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: const Color(
+                              0xFF101516,
+                            ).withValues(alpha: 0.72),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            height: 1.32,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      ],
                     ),
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text(
-                      'Got it',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0,
+                  ),
+                ),
+                Positioned(
+                  left: 48,
+                  right: 48,
+                  bottom: width * 0.16,
+                  child: Semantics(
+                    button: true,
+                    label: 'Continue',
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: onContinue,
+                      child: Image.asset(
+                        'assets/images/Lead.png',
+                        height: 48,
+                        fit: BoxFit.fill,
                       ),
                     ),
                   ),
@@ -99,8 +113,8 @@ Future<void> showCragNoticeDialog({
               ],
             ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
+  }
 }
