@@ -156,7 +156,7 @@ class _ModerationReportScreenState extends State<ModerationReportScreen> {
         assetPath: 'assets/images/HarborWallBackdrop.png',
         scrimOpacity: 0.22,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(22, topInset + 18, 22, 24),
+          padding: EdgeInsets.fromLTRB(22, topInset + 6, 22, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

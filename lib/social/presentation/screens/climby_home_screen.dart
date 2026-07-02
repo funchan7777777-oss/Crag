@@ -69,7 +69,9 @@ class _ClimbyHomeScreenState extends State<ClimbyHomeScreen> {
 
               return CustomScrollView(
                 slivers: [
-                  SliverToBoxAdapter(child: SizedBox(height: topInset + 14)),
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: topInset > 14 ? topInset - 14 : 0),
+                  ),
                   SliverToBoxAdapter(
                     child: _HomeHero(
                       store: _store,
@@ -664,7 +666,7 @@ class PopularSpotsScreen extends StatelessWidget {
           return ListView.separated(
             padding: EdgeInsets.fromLTRB(
               16,
-              MediaQuery.paddingOf(context).top + 86,
+              MediaQuery.paddingOf(context).top + 68,
               16,
               24,
             ),
@@ -860,7 +862,7 @@ class SpotDetailScreen extends StatelessWidget {
           return ListView(
             padding: EdgeInsets.fromLTRB(
               16,
-              MediaQuery.paddingOf(context).top + 82,
+              MediaQuery.paddingOf(context).top + 64,
               16,
               28,
             ),
@@ -1161,7 +1163,7 @@ class PartnerListScreen extends StatelessWidget {
           return ListView.separated(
             padding: EdgeInsets.fromLTRB(
               16,
-              MediaQuery.paddingOf(context).top + 86,
+              MediaQuery.paddingOf(context).top + 68,
               16,
               24,
             ),
@@ -1333,7 +1335,7 @@ class TrendingPostsScreen extends StatelessWidget {
           return GridView.builder(
             padding: EdgeInsets.fromLTRB(
               16,
-              MediaQuery.paddingOf(context).top + 86,
+              MediaQuery.paddingOf(context).top + 68,
               16,
               24,
             ),
@@ -1414,7 +1416,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           return ListView(
             padding: EdgeInsets.fromLTRB(
               16,
-              MediaQuery.paddingOf(context).top + 86,
+              MediaQuery.paddingOf(context).top + 68,
               16,
               96,
             ),
@@ -1690,7 +1692,7 @@ class UserProfileScreen extends StatelessWidget {
               Positioned(
                 left: 16,
                 right: 16,
-                top: topInset + 14,
+                top: topInset + 2,
                 child: Row(
                   children: [
                     IconButton(
@@ -1897,7 +1899,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
       title: 'AI Coach',
       bottom: _CommentComposer(controller: _controller, onSend: _send),
       child: ListView.separated(
-        padding: EdgeInsets.fromLTRB(16, topInset + 92, 16, bottomInset + 92),
+        padding: EdgeInsets.fromLTRB(16, topInset + 74, 16, bottomInset + 92),
         itemCount: _notes.length,
         separatorBuilder: (_, _) => const SizedBox(height: 14),
         itemBuilder: (context, index) {
@@ -1954,7 +1956,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
       body: ListView(
         padding: EdgeInsets.fromLTRB(
           16,
-          MediaQuery.paddingOf(context).top + 18,
+          MediaQuery.paddingOf(context).top + 6,
           16,
           24,
         ),
@@ -2126,7 +2128,7 @@ class _CliffScreenFrame extends StatelessWidget {
           Positioned(
             left: 12,
             right: 12,
-            top: topInset + 14,
+            top: topInset + 2,
             child: SizedBox(
               height: 48,
               child: Stack(

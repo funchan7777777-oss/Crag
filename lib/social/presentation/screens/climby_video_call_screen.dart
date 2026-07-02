@@ -103,7 +103,7 @@ class _ClimbyVideoCallScreenState extends State<ClimbyVideoCallScreen> {
           Positioned(
             left: 16,
             right: 16,
-            top: topInset + 16,
+            top: topInset + 4,
             child: Row(
               children: [
                 IconButton(

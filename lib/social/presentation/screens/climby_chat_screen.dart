@@ -97,7 +97,7 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
           Positioned(
             left: 12,
             right: 12,
-            top: topInset + 14,
+            top: topInset + 2,
             child: Row(
               children: [
                 IconButton(
@@ -162,7 +162,7 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
               final messages = widget.store.messagesFor(widget.user.id);
               if (messages.isEmpty) {
                 return Positioned.fill(
-                  top: topInset + 88,
+                  top: topInset + 68,
                   bottom: bottomInset + 86,
                   child: Center(
                     child: Padding(
@@ -187,7 +187,7 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
               return ListView.separated(
                 padding: EdgeInsets.fromLTRB(
                   16,
-                  topInset + 92,
+                  topInset + 72,
                   16,
                   bottomInset + 94,
                 ),
