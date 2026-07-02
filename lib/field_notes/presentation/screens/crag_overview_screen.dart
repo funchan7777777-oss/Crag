@@ -26,10 +26,12 @@ class _CragOverviewScreenState extends State<CragOverviewScreen> {
   @override
   Widget build(BuildContext context) {
     final activeSector = _sectorLedger[_activeSectorIndex];
+    final topInset = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
+          SliverToBoxAdapter(child: SizedBox(height: topInset + 12)),
           SliverToBoxAdapter(
             child: CragFieldHeader(
               weatherWindow: HighlandCragNotebook.weatherWindow,

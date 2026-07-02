@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../field_notes/presentation/screens/crag_overview_screen.dart';
+import '../../../field_notes/presentation/screens/crag_home_tabs_screen.dart';
 import '../../data/local_crag_access_cache.dart';
 import 'route_cards_onboarding_screen.dart';
 import 'trailhead_access_screen.dart';
@@ -37,7 +37,7 @@ class _BootCragLoaderScreenState extends State<BootCragLoaderScreen>
 
     final activeCard = cache.readActiveCard();
     final nextScreen = activeCard != null
-        ? const CragOverviewScreen()
+        ? const CragHomeTabsScreen()
         : cache.hasSeenRouteCards
         ? TrailheadAccessScreen(cache: cache)
         : RouteCardsOnboardingScreen(cache: cache);

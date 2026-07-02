@@ -20,13 +20,15 @@ class TrailheadAccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.black,
       body: CragImageBackdrop(
         assetPath: 'assets/images/Carabiner.png',
-        child: SafeArea(
-          minimum: const EdgeInsets.fromLTRB(24, 0, 24, 44),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(24, 0, 24, bottomInset + 44),
           child: Align(
             alignment: Alignment.bottomCenter,
             child: NeonHoldButton(

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../../field_notes/presentation/screens/crag_overview_screen.dart';
+import '../../../field_notes/presentation/screens/crag_home_tabs_screen.dart';
 import '../../data/local_crag_access_cache.dart';
 import '../../domain/models/climber_access_card.dart';
 import '../widgets/access_text_field.dart';
@@ -154,7 +154,7 @@ class _ClimberProfileTuningScreenState
       return;
     }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const CragOverviewScreen()),
+      MaterialPageRoute<void>(builder: (_) => const CragHomeTabsScreen()),
       (_) => false,
     );
   }

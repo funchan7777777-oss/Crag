@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../field_notes/presentation/screens/crag_overview_screen.dart';
+import '../../../field_notes/presentation/screens/crag_home_tabs_screen.dart';
 import '../../data/local_crag_access_cache.dart';
 
 class RidgeEntryLoadingScreen extends StatefulWidget {
@@ -33,7 +33,7 @@ class _RidgeEntryLoadingScreenState extends State<RidgeEntryLoadingScreen>
       return;
     }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const CragOverviewScreen()),
+      MaterialPageRoute<void>(builder: (_) => const CragHomeTabsScreen()),
       (_) => false,
     );
   }
