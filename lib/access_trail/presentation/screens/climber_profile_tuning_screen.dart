@@ -161,8 +161,6 @@ class _ClimberProfileTuningScreenState
 
   @override
   Widget build(BuildContext context) {
-    final buttonCopy = widget.accessRoute == 'apple' ? 'Enter' : 'Next';
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.black,
@@ -214,7 +212,7 @@ class _ClimberProfileTuningScreenState
                     hint: 'Share your current climbing note',
                   ),
                   const SizedBox(height: 34),
-                  NeonHoldButton(label: buttonCopy, onPressed: _finishProfile),
+                  NeonHoldButton(label: 'Continue', onPressed: _finishProfile),
                 ],
               ),
             ),

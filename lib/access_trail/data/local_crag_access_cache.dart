@@ -8,7 +8,6 @@ class LocalCragAccessCache {
   final SharedPreferences _prefs;
 
   static const _onboardingSeenKey = 'crag.routeCards.seen';
-  static const _appleNameKey = 'crag.apple.lastDisplayName';
   static const _storedEmailKey = 'crag.localCredential.email';
   static const _storedPasswordKey = 'crag.localCredential.password';
   static const _activePrefix = 'crag.activeAccess.';
@@ -22,18 +21,6 @@ class LocalCragAccessCache {
 
   Future<void> markRouteCardsSeen() async {
     await _prefs.setBool(_onboardingSeenKey, true);
-  }
-
-  Future<void> rememberAppleTrailName(String trailName) async {
-    if (trailName.trim().isEmpty) {
-      return;
-    }
-    await _prefs.setString(_appleNameKey, trailName.trim());
-  }
-
-  String? readAppleTrailName() {
-    final cached = _prefs.getString(_appleNameKey);
-    return cached == null || cached.trim().isEmpty ? null : cached;
   }
 
   Future<void> keepLocalCredential({

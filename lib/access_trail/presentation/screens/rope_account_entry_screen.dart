@@ -8,7 +8,9 @@ import '../widgets/crag_image_backdrop.dart';
 import '../widgets/crag_notice_dialog.dart';
 import '../widgets/ledge_back_button.dart';
 import '../widgets/neon_hold_button.dart';
+import '../widgets/policy_agreement_strip.dart';
 import 'fresh_rope_signup_screen.dart';
+import 'policy_web_ledge_screen.dart';
 import 'ridge_entry_loading_screen.dart';
 
 class RopeAccountEntryScreen extends StatefulWidget {
@@ -24,6 +26,7 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _hidePassword = true;
+  bool _acceptedPolicy = false;
 
   @override
   void dispose() {
@@ -33,6 +36,10 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
   }
 
   Future<void> _start() async {
+    if (!_guardAgreement()) {
+      return;
+    }
+
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
@@ -100,6 +107,32 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
     );
   }
 
+  bool _guardAgreement() {
+    if (_acceptedPolicy) {
+      return true;
+    }
+    showCragNoticeDialog(
+      context: context,
+      title: 'Agreement needed',
+      message:
+          'Please agree to the Terms of Service and Privacy Policy before continuing.',
+    );
+    return false;
+  }
+
+  void _openPolicy(String url) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PolicyWebLedgeScreen(
+          url: url,
+          screenTitle: url == AccessCopyLedger.termsUrl
+              ? 'Terms of Service'
+              : 'Privacy Policy',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,7 +141,7 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
       body: Stack(
         children: [
           CragImageBackdrop(
-            assetPath: 'assets/images/HarborWallBackdrop.png',
+            assetPath: 'assets/images/Vibe.png',
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 112, 24, 34),
               child: Column(
@@ -157,7 +190,7 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
                     ),
                   ),
                   const SizedBox(height: 34),
-                  NeonHoldButton(label: 'Start', onPressed: _start),
+                  NeonHoldButton(label: 'Login', onPressed: _start),
                   const SizedBox(height: 22),
                   Center(
                     child: GestureDetector(
@@ -183,6 +216,14 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
                         ),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 18),
+                  PolicyAgreementStrip(
+                    accepted: _acceptedPolicy,
+                    onChanged: (accepted) {
+                      setState(() => _acceptedPolicy = accepted);
+                    },
+                    onOpenPolicy: _openPolicy,
                   ),
                 ],
               ),
