@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../access_trail/presentation/widgets/crag_notice_dialog.dart';
 import '../../data/climby_social_store.dart';
 
 class CreatePostScreen extends StatefulWidget {
@@ -123,23 +124,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     required String title,
     required String message,
   }) {
-    return showDialog<void>(
+    return showCragNoticeDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF121516),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(title, style: const TextStyle(color: Colors.white)),
-        content: Text(
-          message,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.72)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK', style: TextStyle(color: Color(0xFFD6FF00))),
-          ),
-        ],
-      ),
+      title: title,
+      message: message,
     );
   }
 
@@ -163,10 +151,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       return;
     }
     setState(() => _submitting = false);
-    await showDialog<void>(
+    await showCragNoticeDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => const _PostReviewDialog(),
+      title: 'Post submitted',
+      message:
+          'Your dynamic was submitted successfully. It is now queued for background review and will appear after approval.',
     );
     if (mounted) {
       Navigator.of(context).pop();
@@ -456,115 +445,6 @@ class _SelectedPhotoTile extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _PostReviewDialog extends StatelessWidget {
-  const _PostReviewDialog();
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 28),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
-        decoration: BoxDecoration(
-          color: const Color(0xFF101516),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFD6FF00), width: 1.4),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFD6FF00).withValues(alpha: 0.2),
-              blurRadius: 30,
-              offset: const Offset(0, 16),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 92,
-              height: 92,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/Quickdraw.png',
-                    width: 76,
-                    height: 76,
-                    fit: BoxFit.contain,
-                  ),
-                  Positioned(
-                    right: 0,
-                    bottom: 8,
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFD6FF00),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.verified_rounded,
-                        color: Colors.black,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            const Text(
-              'Post clipped in',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 23,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Your dynamic was submitted successfully. It is now queued for background review and will appear after approval.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72),
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                height: 1.35,
-                letterSpacing: 0,
-              ),
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              width: double.infinity,
-              height: 46,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFD6FF00),
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text(
-                  'Got it',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
