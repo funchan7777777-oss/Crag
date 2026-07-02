@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../data/climby_social_store.dart';
@@ -14,11 +16,31 @@ class ClimbyHomeScreen extends StatefulWidget {
 class _ClimbyHomeScreenState extends State<ClimbyHomeScreen> {
   final _store = ClimbySocialStore.instance;
   String _activeCategory = 'All';
+  Timer? _heroPostTimer;
+  int _heroPostIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _store.load();
+    _heroPostTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted) {
+        return;
+      }
+      final posts = _store.visiblePosts(category: _activeCategory);
+      if (posts.length < 2) {
+        return;
+      }
+      setState(() {
+        _heroPostIndex = (_heroPostIndex + 1) % posts.length;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _heroPostTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -27,46 +49,73 @@ class _ClimbyHomeScreenState extends State<ClimbyHomeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D1112),
-      body: AnimatedBuilder(
-        animation: _store,
-        builder: (context, _) {
-          final posts = _store.visiblePosts(category: _activeCategory);
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/Clip.png',
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.fill,
+            ),
+          ),
+          AnimatedBuilder(
+            animation: _store,
+            builder: (context, _) {
+              final posts = _store.visiblePosts(category: _activeCategory);
+              final heroPostIndex = posts.isEmpty
+                  ? 0
+                  : _heroPostIndex % posts.length;
 
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: SizedBox(height: topInset + 14)),
-              SliverToBoxAdapter(child: _HomeHero(store: _store)),
-              SliverToBoxAdapter(child: _FeatureDock(store: _store)),
-              SliverToBoxAdapter(child: _HomeActionGrid(store: _store)),
-              SliverToBoxAdapter(
-                child: _CategoryRail(
-                  active: _activeCategory,
-                  onChanged: (category) {
-                    setState(() => _activeCategory = category);
-                  },
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 112),
-                sliver: posts.isEmpty
-                    ? const SliverToBoxAdapter(child: _EmptyFeedPanel())
-                    : SliverGrid.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 16,
-                              childAspectRatio: 0.62,
-                            ),
-                        itemCount: posts.length,
-                        itemBuilder: (context, index) {
-                          return _PostTile(store: _store, post: posts[index]);
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: SizedBox(height: topInset + 14)),
+                  SliverToBoxAdapter(
+                    child: _HomeHero(
+                      store: _store,
+                      posts: posts,
+                      activePostIndex: heroPostIndex,
+                    ),
+                  ),
+                  SliverToBoxAdapter(child: _FeatureDock(store: _store)),
+                  SliverToBoxAdapter(child: _HomeActionGrid(store: _store)),
+                  SliverToBoxAdapter(
+                    child: _CategoryRail(
+                      active: _activeCategory,
+                      onChanged: (category) {
+                        setState(() {
+                          _activeCategory = category;
+                          _heroPostIndex = 0;
+                        });
+                      },
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 112),
+                    sliver: posts.isEmpty
+                        ? const SliverToBoxAdapter(child: _EmptyFeedPanel())
+                        : SliverGrid.builder(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 16,
+                                  childAspectRatio: 0.62,
+                                ),
+                            itemCount: posts.length,
+                            itemBuilder: (context, index) {
+                              return _PostTile(
+                                store: _store,
+                                post: posts[index],
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFD6FF00),
@@ -87,32 +136,31 @@ class _ClimbyHomeScreenState extends State<ClimbyHomeScreen> {
 }
 
 class _HomeHero extends StatelessWidget {
-  const _HomeHero({required this.store});
+  const _HomeHero({
+    required this.store,
+    required this.posts,
+    required this.activePostIndex,
+  });
 
   final ClimbySocialStore store;
+  final List<ClimbyPost> posts;
+  final int activePostIndex;
 
   @override
   Widget build(BuildContext context) {
-    final highlight = store.visiblePosts().isNotEmpty
-        ? store.visiblePosts().first
+    final sourcePosts = posts.isNotEmpty ? posts : store.visiblePosts();
+    final highlight = sourcePosts.isNotEmpty
+        ? sourcePosts[activePostIndex % sourcePosts.length]
         : seedPosts.first;
     final user = store.userById(highlight.userId) ?? seedUsers.first;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       child: SizedBox(
-        height: 214,
+        height: 184,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF111516),
-                  borderRadius: BorderRadius.circular(28),
-                ),
-              ),
-            ),
             Positioned(
               right: -8,
               top: -46,
@@ -125,44 +173,52 @@ class _HomeHero extends StatelessWidget {
                     clipBehavior: Clip.none,
                     children: [
                       Positioned(
-                        right: 14,
-                        top: 0,
-                        bottom: 0,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(28),
-                          child: Image.asset(
-                            'assets/images/Clip.png',
-                            width: 116,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      Positioned(
                         left: 24,
                         top: 54,
                         child: Transform.rotate(
                           angle: -0.08,
                           child: SizedBox(
-                            width: 154,
-                            height: 166,
+                            width: 164,
+                            height: 150,
                             child: Stack(
+                              clipBehavior: Clip.none,
                               children: [
-                                Positioned.fill(
-                                  child: Image.asset(
-                                    'assets/images/Beacon.png',
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
                                 Positioned(
-                                  left: 17,
-                                  top: 54,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(6),
-                                    child: Image.asset(
-                                      highlight.imageAsset,
-                                      width: 126,
-                                      height: 96,
-                                      fit: BoxFit.cover,
+                                  left: 0,
+                                  right: 0,
+                                  top: 24,
+                                  bottom: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(14),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          blurRadius: 14,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(9),
+                                      child: AnimatedSwitcher(
+                                        duration: const Duration(
+                                          milliseconds: 320,
+                                        ),
+                                        switchInCurve: Curves.easeOutCubic,
+                                        switchOutCurve: Curves.easeInCubic,
+                                        child: Image.asset(
+                                          highlight.imageAsset,
+                                          key: ValueKey(highlight.id),
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -214,11 +270,10 @@ class _HomeHero extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Image.asset(
-                      'assets/images/Helmet.png',
-                      width: 54,
-                      height: 6,
-                      fit: BoxFit.fill,
+                    const SizedBox(
+                      width: 142,
+                      height: 2,
+                      child: ColoredBox(color: Color(0xFFFF6A1D)),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -299,25 +354,17 @@ class _FeatureDock extends StatelessWidget {
       ),
     ];
 
-    return Transform.translate(
-      offset: const Offset(0, -18),
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF151A1B),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-          border: Border(
-            top: BorderSide(
-              color: Colors.white.withValues(alpha: 0.22),
-              width: 1.2,
-            ),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: features,
-        ),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151A1B),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+        border: Border.all(color: const Color(0xFF667174), width: 1.6),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: features,
       ),
     );
   }
@@ -340,24 +387,28 @@ class _HomeFeature extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: Column(
-          children: [
-            Image.asset(asset, width: 46, height: 46, fit: BoxFit.contain),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                height: 1.2,
-                letterSpacing: 0,
+        child: SizedBox(
+          height: 96,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(asset, width: 51, height: 48, fit: BoxFit.contain),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  height: 1.2,
+                  letterSpacing: 0,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
