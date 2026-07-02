@@ -1804,28 +1804,8 @@ class UserProfileScreen extends StatelessWidget {
                         letterSpacing: 0,
                       ),
                     ),
-                    if (userPosts.isNotEmpty) ...[
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        height: 58,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: userPosts.length,
-                          separatorBuilder: (_, _) => const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            return ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.asset(
-                                userPosts[index].imageAsset,
-                                width: 58,
-                                height: 58,
-                                fit: BoxFit.cover,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                    const SizedBox(height: 14),
+                    _ProfilePostStrip(store: store, posts: userPosts),
                     const SizedBox(height: 20),
                     Row(
                       children: [
@@ -1884,6 +1864,62 @@ class AiCoachScreen extends StatefulWidget {
 
   @override
   State<AiCoachScreen> createState() => _AiCoachScreenState();
+}
+
+class _ProfilePostStrip extends StatelessWidget {
+  const _ProfilePostStrip({required this.store, required this.posts});
+
+  final ClimbySocialStore store;
+  final List<ClimbyPost> posts;
+
+  @override
+  Widget build(BuildContext context) {
+    if (posts.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.28),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        child: Text(
+          'No posts yet.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.72),
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0,
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 62,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: posts.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final post = posts[index];
+          return GestureDetector(
+            onTap: () => _openPost(context, store, post),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                post.imageAsset,
+                width: 62,
+                height: 62,
+                fit: BoxFit.cover,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _AiCoachScreenState extends State<AiCoachScreen> {
