@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../field_notes/presentation/screens/crag_home_tabs_screen.dart';
 import '../../data/climby_social_store.dart';
 import 'climby_chat_screen.dart';
+import 'climby_video_call_screen.dart';
 import 'moderation_report_screen.dart';
 
 class ClimbyHomeScreen extends StatefulWidget {
@@ -2139,6 +2140,30 @@ class UserProfileScreen extends StatelessWidget {
                 ),
               ),
               Positioned(
+                left: 0,
+                right: 0,
+                top: topInset + 176,
+                child: Center(
+                  child: Container(
+                    width: 86,
+                    height: 86,
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.94),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.34),
+                          blurRadius: 20,
+                          offset: const Offset(0, 9),
+                        ),
+                      ],
+                    ),
+                    child: _Avatar(asset: user.avatarAsset, size: 80),
+                  ),
+                ),
+              ),
+              Positioned(
                 left: 16,
                 right: 16,
                 top: topInset + 2,
@@ -2177,24 +2202,6 @@ class UserProfileScreen extends StatelessWidget {
                 bottom: MediaQuery.paddingOf(context).bottom + 22,
                 child: Column(
                   children: [
-                    Container(
-                      width: 84,
-                      height: 84,
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.92),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.32),
-                            blurRadius: 18,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: _Avatar(asset: user.avatarAsset, size: 78),
-                    ),
-                    const SizedBox(height: 12),
                     Text(
                       user.name,
                       style: const TextStyle(
@@ -2258,14 +2265,7 @@ class UserProfileScreen extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: GestureDetector(
-                            onTap: () => _push(
-                              context,
-                              ClimbyChatScreen(
-                                store: store,
-                                user: user,
-                                openVideoFirst: true,
-                              ),
-                            ),
+                            onTap: () => _openVideoCall(context, store, user),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.asset(
@@ -2906,4 +2906,24 @@ void _openProfile(
 
 void _openPost(BuildContext context, ClimbySocialStore store, ClimbyPost post) {
   _push(context, PostDetailScreen(store: store, post: post));
+}
+
+Future<void> _openVideoCall(
+  BuildContext context,
+  ClimbySocialStore store,
+  ClimbyUser user,
+) async {
+  await store.load();
+  if (!store.isMutualFollow(user.id)) {
+    if (context.mounted) {
+      await showMutualFollowRequiredDialog(context);
+    }
+    return;
+  }
+  if (!context.mounted) {
+    return;
+  }
+  await Navigator.of(context).push(
+    MaterialPageRoute<void>(builder: (_) => ClimbyVideoCallScreen(user: user)),
+  );
 }

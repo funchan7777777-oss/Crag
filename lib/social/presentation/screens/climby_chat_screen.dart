@@ -85,10 +85,7 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            'assets/images/HarborWallBackdrop.png',
-            fit: BoxFit.cover,
-          ),
+          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
           DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.24),
@@ -152,6 +149,22 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
                 IconButton(
                   onPressed: _startVideo,
                   icon: const Icon(Icons.videocam_rounded, color: Colors.white),
+                ),
+                IconButton(
+                  onPressed: () => openModerationScreen(
+                    context: context,
+                    store: widget.store,
+                    target: ModerationTarget(
+                      kind: ModerationKind.user,
+                      key: 'user:${widget.user.id}',
+                      title: widget.user.name,
+                      userId: widget.user.id,
+                    ),
+                  ),
+                  icon: const Icon(
+                    Icons.more_vert_rounded,
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
