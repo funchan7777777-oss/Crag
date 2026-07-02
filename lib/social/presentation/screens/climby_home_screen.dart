@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../field_notes/presentation/screens/crag_home_tabs_screen.dart';
 import '../../data/climby_social_store.dart';
 import 'climby_chat_screen.dart';
+import 'climby_create_post_screen.dart';
 import 'climby_video_call_screen.dart';
 import 'moderation_report_screen.dart';
 
@@ -126,14 +127,7 @@ class _ClimbyHomeScreenState extends State<ClimbyHomeScreen> {
         backgroundColor: const Color(0xFFD6FF00),
         foregroundColor: Colors.black,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        onPressed: () {
-          showClimbyNotice(
-            context: context,
-            title: 'Create post',
-            message:
-                'Post creation is ready for a real media picker flow, so no placeholder content is published locally.',
-          );
-        },
+        onPressed: () => _push(context, CreatePostScreen(store: _store)),
         child: const Icon(Icons.add_rounded, size: 34),
       ),
     );
@@ -663,6 +657,8 @@ class PopularSpotsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return _CliffScreenFrame(
       title: 'Popular Spots',
+      backgroundAsset: 'assets/images/Vibe.png',
+      backgroundFit: BoxFit.fill,
       child: AnimatedBuilder(
         animation: store,
         builder: (context, _) {
@@ -1160,6 +1156,8 @@ class PartnerListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return _CliffScreenFrame(
       title: 'Climbing Partners',
+      backgroundAsset: 'assets/images/Vibe.png',
+      backgroundFit: BoxFit.fill,
       child: AnimatedBuilder(
         animation: store,
         builder: (context, _) {
@@ -1394,6 +1392,8 @@ class _TrendingPostsScreenState extends State<TrendingPostsScreen> {
   Widget build(BuildContext context) {
     return _CliffScreenFrame(
       title: widget.title,
+      backgroundAsset: 'assets/images/Vibe.png',
+      backgroundFit: BoxFit.fill,
       child: AnimatedBuilder(
         animation: widget.store,
         builder: (context, _) {

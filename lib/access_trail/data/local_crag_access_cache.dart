@@ -63,6 +63,9 @@ class LocalCragAccessCache {
       'anchoredAtIso',
       'contactEmail',
       'avatarFilePath',
+      'genderLabel',
+      'birthDate',
+      'city',
     ]) {
       final value = _prefs.getString('$_activePrefix$key');
       if (value != null) {
@@ -82,6 +85,9 @@ class LocalCragAccessCache {
       'anchoredAtIso',
       'contactEmail',
       'avatarFilePath',
+      'genderLabel',
+      'birthDate',
+      'city',
     ]) {
       final value = cacheMap[key];
       if (value == null) {
@@ -90,5 +96,29 @@ class LocalCragAccessCache {
         await _prefs.setString('$_activePrefix$key', value);
       }
     }
+  }
+
+  Future<void> clearActiveCard() async {
+    for (final key in [
+      'corridorKey',
+      'accessRoute',
+      'trailName',
+      'fieldBio',
+      'anchoredAtIso',
+      'contactEmail',
+      'avatarFilePath',
+      'genderLabel',
+      'birthDate',
+      'city',
+    ]) {
+      await _prefs.remove('$_activePrefix$key');
+    }
+  }
+
+  Future<void> resetAfterAccountDeletion() async {
+    await clearActiveCard();
+    await _prefs.remove(_storedEmailKey);
+    await _prefs.remove(_storedPasswordKey);
+    await _prefs.remove(_onboardingSeenKey);
   }
 }

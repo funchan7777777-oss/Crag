@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../foundation/theme/ledge_palette.dart';
+import '../../../social/presentation/screens/climby_me_screen.dart';
+import '../../../social/presentation/screens/climby_messages_screen.dart';
+import '../../../social/presentation/screens/climby_video_feed_screen.dart';
 import 'crag_overview_screen.dart';
 
 class CragHomeTabsScreen extends StatefulWidget {
@@ -46,18 +49,9 @@ class _CragHomeTabsScreenState extends State<CragHomeTabsScreen> {
           index: _activeIndex,
           children: const [
             CragOverviewScreen(),
-            _CragTabPlaceholder(
-              title: 'League',
-              iconAsset: 'assets/images/Squad.png',
-            ),
-            _CragTabPlaceholder(
-              title: 'Signal',
-              iconAsset: 'assets/images/Profile.png',
-            ),
-            _CragTabPlaceholder(
-              title: 'Route',
-              iconAsset: 'assets/images/Send.png',
-            ),
+            ClimbyVideoFeedScreen(),
+            ClimbyMessagesScreen(),
+            ClimbyMeScreen(),
           ],
         ),
       ),
@@ -154,58 +148,6 @@ class _CragTabButton extends StatelessWidget {
             height: 32,
             fit: BoxFit.contain,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CragTabPlaceholder extends StatelessWidget {
-  const _CragTabPlaceholder({required this.title, required this.iconAsset});
-
-  final String title;
-  final String iconAsset;
-
-  @override
-  Widget build(BuildContext context) {
-    final topInset = MediaQuery.paddingOf(context).top;
-
-    return ColoredBox(
-      color: LedgePalette.chalkWhite,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(20, topInset + 6, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: const Color(0xFF121516),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Image.asset(
-                      iconAsset,
-                      width: 32,
-                      height: 32,
-                      fit: BoxFit.contain,
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

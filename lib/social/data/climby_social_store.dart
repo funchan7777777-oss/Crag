@@ -19,6 +19,7 @@ class ClimbySocialStore extends ChangeNotifier {
   static const _mutualFollowsKey = 'climby.mutual.follows.v1';
   static const _messagesKey = 'climby.messages.v1';
   static const _commentsKey = 'climby.comments.v1';
+  static const _pendingPostsKey = 'climby.pending.posts.v1';
 
   SharedPreferences? _prefs;
   bool _loaded = false;
@@ -28,6 +29,7 @@ class ClimbySocialStore extends ChangeNotifier {
   final Set<String> _mutualFollowUserIds = {};
   final Map<String, List<ClimbyMessage>> _messagesByUser = {};
   final Map<String, List<ClimbyComment>> _localCommentsByPost = {};
+  final List<ClimbyPendingPost> _pendingPosts = [];
 
   bool get loaded => _loaded;
 
@@ -49,6 +51,7 @@ class ClimbySocialStore extends ChangeNotifier {
     }
     _messagesByUser.addAll(_readMessageMap(_messagesKey));
     _localCommentsByPost.addAll(_readCommentMap(_commentsKey));
+    _pendingPosts.addAll(_readPendingPosts(_pendingPostsKey));
     _loaded = true;
     notifyListeners();
   }
@@ -60,6 +63,34 @@ class ClimbySocialStore extends ChangeNotifier {
               !_blockedUserIds.contains(user.id) &&
               !_reportedKeys.contains('user:${user.id}'),
         )
+        .toList(growable: false);
+  }
+
+  List<ClimbyUser> get followingUsers {
+    return seedUsers
+        .where(
+          (user) =>
+              _followingUserIds.contains(user.id) &&
+              !_blockedUserIds.contains(user.id) &&
+              !_reportedKeys.contains('user:${user.id}'),
+        )
+        .toList(growable: false);
+  }
+
+  List<ClimbyUser> get followerUsers {
+    return seedUsers
+        .where(
+          (user) =>
+              _mutualFollowUserIds.contains(user.id) &&
+              !_blockedUserIds.contains(user.id) &&
+              !_reportedKeys.contains('user:${user.id}'),
+        )
+        .toList(growable: false);
+  }
+
+  List<ClimbyUser> get blockedUsers {
+    return seedUsers
+        .where((user) => _blockedUserIds.contains(user.id))
         .toList(growable: false);
   }
 
@@ -82,6 +113,10 @@ class ClimbySocialStore extends ChangeNotifier {
     return seedSpots
         .where((spot) => !_reportedKeys.contains('spot:${spot.id}'))
         .toList(growable: false);
+  }
+
+  List<ClimbyPendingPost> get pendingPosts {
+    return List.unmodifiable(_pendingPosts);
   }
 
   List<ClimbyComment> commentsFor(String postId) {
@@ -198,6 +233,35 @@ class ClimbySocialStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> submitPostForReview({
+    required List<String> imagePaths,
+    required String caption,
+    required String category,
+  }) async {
+    await load();
+    final trimmed = caption.trim();
+    final cleanPaths = imagePaths
+        .map((path) => path.trim())
+        .where((path) => path.isNotEmpty)
+        .toList(growable: false);
+    if (cleanPaths.isEmpty || trimmed.isEmpty) {
+      return;
+    }
+    _pendingPosts.insert(
+      0,
+      ClimbyPendingPost(
+        id: 'pending_${DateTime.now().microsecondsSinceEpoch}',
+        imagePaths: cleanPaths,
+        caption: trimmed,
+        category: category,
+        createdIso: DateTime.now().toIso8601String(),
+        status: 'reviewing',
+      ),
+    );
+    await _writePendingPosts();
+    notifyListeners();
+  }
+
   Future<void> sendMessage({
     required String userId,
     required String text,
@@ -234,13 +298,23 @@ class ClimbySocialStore extends ChangeNotifier {
     final userId = target.userId;
     if (userId != null) {
       _blockedUserIds.add(userId);
+      _followingUserIds.remove(userId);
+      _mutualFollowUserIds.remove(userId);
       _messagesByUser.remove(userId);
       await _writeStringSet(_blockedUsersKey, _blockedUserIds);
+      await _writeStringSet(_followingKey, _followingUserIds);
+      await _writeStringSet(_mutualFollowsKey, _mutualFollowUserIds);
       await _writeMessageMap();
     } else {
       _reportedKeys.add(target.key);
       await _writeStringSet(_reportedKey, _reportedKeys);
     }
+    notifyListeners();
+  }
+
+  Future<void> unblockUser(String userId) async {
+    _blockedUserIds.remove(userId);
+    await _writeStringSet(_blockedUsersKey, _blockedUserIds);
     notifyListeners();
   }
 
@@ -313,6 +387,28 @@ class ClimbySocialStore extends ChangeNotifier {
     );
     await _prefs?.setString(_commentsKey, jsonEncode(payload));
   }
+
+  List<ClimbyPendingPost> _readPendingPosts(String key) {
+    final raw = _prefs?.getString(key);
+    if (raw == null || raw.isEmpty) {
+      return const [];
+    }
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) {
+      return const [];
+    }
+    return decoded
+        .whereType<Map<String, dynamic>>()
+        .map(ClimbyPendingPost.fromJson)
+        .toList();
+  }
+
+  Future<void> _writePendingPosts() async {
+    final payload = _pendingPosts
+        .map((post) => post.toJson())
+        .toList(growable: false);
+    await _prefs?.setString(_pendingPostsKey, jsonEncode(payload));
+  }
 }
 
 class ClimbyUser {
@@ -355,6 +451,53 @@ class ClimbyPost {
   final String category;
   final String timeAgo;
   final int likeCount;
+}
+
+class ClimbyPendingPost {
+  const ClimbyPendingPost({
+    required this.id,
+    required this.imagePaths,
+    required this.caption,
+    required this.category,
+    required this.createdIso,
+    required this.status,
+  });
+
+  final String id;
+  final List<String> imagePaths;
+  final String caption;
+  final String category;
+  final String createdIso;
+  final String status;
+
+  factory ClimbyPendingPost.fromJson(Map<String, dynamic> json) {
+    final rawImagePaths = json['imagePaths'];
+    final imagePaths = rawImagePaths is List
+        ? rawImagePaths.whereType<String>().toList(growable: false)
+        : [
+            if ((json['imagePath'] as String? ?? '').isNotEmpty)
+              json['imagePath'] as String,
+          ];
+    return ClimbyPendingPost(
+      id: json['id'] as String? ?? '',
+      imagePaths: imagePaths,
+      caption: json['caption'] as String? ?? '',
+      category: json['category'] as String? ?? 'All',
+      createdIso: json['createdIso'] as String? ?? '',
+      status: json['status'] as String? ?? 'reviewing',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'imagePaths': imagePaths,
+      'caption': caption,
+      'category': category,
+      'createdIso': createdIso,
+      'status': status,
+    };
+  }
 }
 
 class ClimbySpot {

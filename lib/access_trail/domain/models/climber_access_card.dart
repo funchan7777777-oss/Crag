@@ -7,6 +7,9 @@ class ClimberAccessCard {
     required this.anchoredAtIso,
     this.contactEmail,
     this.avatarFilePath,
+    this.genderLabel,
+    this.birthDate,
+    this.city,
   });
 
   final String corridorKey;
@@ -16,6 +19,9 @@ class ClimberAccessCard {
   final String anchoredAtIso;
   final String? contactEmail;
   final String? avatarFilePath;
+  final String? genderLabel;
+  final String? birthDate;
+  final String? city;
 
   Map<String, String> toCacheMap() {
     final cacheMap = {
@@ -33,7 +39,42 @@ class ClimberAccessCard {
     if (avatarPath != null) {
       cacheMap['avatarFilePath'] = avatarPath;
     }
+    final gender = genderLabel;
+    final birth = birthDate;
+    final homeCity = city;
+    if (gender != null) {
+      cacheMap['genderLabel'] = gender;
+    }
+    if (birth != null) {
+      cacheMap['birthDate'] = birth;
+    }
+    if (homeCity != null) {
+      cacheMap['city'] = homeCity;
+    }
     return cacheMap;
+  }
+
+  ClimberAccessCard copyWith({
+    String? trailName,
+    String? fieldBio,
+    String? contactEmail,
+    String? avatarFilePath,
+    String? genderLabel,
+    String? birthDate,
+    String? city,
+  }) {
+    return ClimberAccessCard(
+      corridorKey: corridorKey,
+      accessRoute: accessRoute,
+      trailName: trailName ?? this.trailName,
+      fieldBio: fieldBio ?? this.fieldBio,
+      anchoredAtIso: anchoredAtIso,
+      contactEmail: contactEmail ?? this.contactEmail,
+      avatarFilePath: avatarFilePath ?? this.avatarFilePath,
+      genderLabel: genderLabel ?? this.genderLabel,
+      birthDate: birthDate ?? this.birthDate,
+      city: city ?? this.city,
+    );
   }
 
   static ClimberAccessCard? fromCacheMap(Map<String, String> cacheMap) {
@@ -59,6 +100,9 @@ class ClimberAccessCard {
       anchoredAtIso: anchoredAtIso,
       contactEmail: cacheMap['contactEmail'],
       avatarFilePath: cacheMap['avatarFilePath'],
+      genderLabel: cacheMap['genderLabel'],
+      birthDate: cacheMap['birthDate'],
+      city: cacheMap['city'],
     );
   }
 }
