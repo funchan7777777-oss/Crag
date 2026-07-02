@@ -114,74 +114,85 @@ class _HomeHero extends StatelessWidget {
               ),
             ),
             Positioned(
-              right: 0,
-              top: -24,
-              bottom: 0,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: Image.asset(
-                  'assets/images/Clip.png',
-                  width: 118,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Positioned(
-              right: 14,
-              top: 42,
-              child: Transform.rotate(
-                angle: 0.1,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Image.asset(
-                    highlight.imageAsset,
-                    width: 132,
-                    height: 132,
-                    fit: BoxFit.cover,
+              right: -8,
+              top: -46,
+              child: GestureDetector(
+                onTap: () => _openPost(context, store, highlight),
+                child: SizedBox(
+                  width: 198,
+                  height: 236,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned(
+                        right: 14,
+                        top: 0,
+                        bottom: 0,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(28),
+                          child: Image.asset(
+                            'assets/images/Clip.png',
+                            width: 116,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 24,
+                        top: 54,
+                        child: Transform.rotate(
+                          angle: -0.08,
+                          child: SizedBox(
+                            width: 154,
+                            height: 166,
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: Image.asset(
+                                    'assets/images/Beacon.png',
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 17,
+                                  top: 54,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Image.asset(
+                                      highlight.imageAsset,
+                                      width: 126,
+                                      height: 96,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 68,
+                        child: Image.asset(
+                          'assets/images/Pocket.png',
+                          width: 74,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ),
-            Positioned(
-              right: 3,
-              top: 34,
-              child: Image.asset(
-                'assets/images/Pocket.png',
-                width: 72,
-                fit: BoxFit.contain,
-              ),
-            ),
-            Positioned(
-              right: 120,
-              top: 104,
-              child: Image.asset(
-                'assets/images/Beacon.png',
-                width: 54,
-                fit: BoxFit.contain,
               ),
             ),
             Positioned(
               left: 16,
               top: 22,
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/images/Knot.png',
-                    width: 30,
-                    height: 30,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'limbly',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0,
-                    ),
-                  ),
-                ],
+              child: Image.asset(
+                'assets/images/Campus.png',
+                width: 98,
+                height: 33,
+                fit: BoxFit.contain,
               ),
             ),
             Positioned(
@@ -288,16 +299,25 @@ class _FeatureDock extends StatelessWidget {
       ),
     ];
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
-      decoration: const BoxDecoration(
-        color: Color(0xFF151A1B),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: features,
+    return Transform.translate(
+      offset: const Offset(0, -18),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF151A1B),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+          border: Border(
+            top: BorderSide(
+              color: Colors.white.withValues(alpha: 0.22),
+              width: 1.2,
+            ),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: features,
+        ),
       ),
     );
   }
