@@ -21,11 +21,7 @@ Future<void> showClimbyNotice({
   required String title,
   required String message,
 }) {
-  return showCragNoticeDialog(
-    context: context,
-    title: title,
-    message: message,
-  );
+  return showCragNoticeDialog(context: context, title: title, message: message);
 }
 
 Future<void> showMutualFollowRequiredDialog(BuildContext context) {
