@@ -108,6 +108,7 @@ class _ClimbyHomeScreenState extends State<ClimbyHomeScreen> {
                             itemCount: posts.length,
                             itemBuilder: (context, index) {
                               return _PostTile(
+                                key: ValueKey(posts[index].id),
                                 store: _store,
                                 post: posts[index],
                               );
@@ -550,7 +551,7 @@ class _CategoryRail extends StatelessWidget {
 }
 
 class _PostTile extends StatefulWidget {
-  const _PostTile({required this.store, required this.post});
+  const _PostTile({required this.store, required this.post, super.key});
 
   final ClimbySocialStore store;
   final ClimbyPost post;
@@ -1189,7 +1190,6 @@ class _PartnerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final requested = store.isFollowRequested(user.id);
     return GestureDetector(
       onTap: () => _openProfile(context, store, user),
       child: Container(
@@ -1271,38 +1271,10 @@ class _PartnerCard extends StatelessWidget {
                 ),
                 SizedBox(
                   height: 34,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: requested
-                          ? const Color(0xFF91BD22)
-                          : const Color(0xFFD6FF00),
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: requested
-                        ? null
-                        : () async {
-                            await store.requestFollow(user.id);
-                            if (context.mounted) {
-                              await showClimbyNotice(
-                                context: context,
-                                title: 'Request sent',
-                                message:
-                                    '${user.name} must approve before chat unlocks.',
-                              );
-                            }
-                          },
-                    child: Text(
-                      requested ? 'Pending' : 'Follow',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 11,
-                        letterSpacing: 0,
-                      ),
-                    ),
+                  child: _FollowToggleButton(
+                    store: store,
+                    user: user,
+                    compact: true,
                   ),
                 ),
               ],
@@ -1314,7 +1286,56 @@ class _PartnerCard extends StatelessWidget {
   }
 }
 
-class TrendingPostsScreen extends StatelessWidget {
+class _FollowToggleButton extends StatelessWidget {
+  const _FollowToggleButton({
+    required this.store,
+    required this.user,
+    this.compact = false,
+  });
+
+  final ClimbySocialStore store;
+  final ClimbyUser user;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final following = store.isFollowing(user.id);
+    return SizedBox(
+      height: compact ? 34 : 44,
+      width: compact ? 94 : 168,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: following
+              ? const Color(0xFF202728)
+              : const Color(0xFFD6FF00),
+          foregroundColor: following ? const Color(0xFFD6FF00) : Colors.black,
+          padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(compact ? 9 : 12),
+            side: BorderSide(
+              color: following
+                  ? const Color(0xFFD6FF00).withValues(alpha: 0.8)
+                  : const Color(0xFFD6FF00),
+            ),
+          ),
+        ),
+        onPressed: () => store.toggleFollow(user.id),
+        child: Text(
+          following ? 'Following' : 'Follow',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: compact ? 11 : 13,
+            letterSpacing: 0,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class TrendingPostsScreen extends StatefulWidget {
   const TrendingPostsScreen({
     required this.store,
     required this.title,
@@ -1327,32 +1348,439 @@ class TrendingPostsScreen extends StatelessWidget {
   final String? category;
 
   @override
+  State<TrendingPostsScreen> createState() => _TrendingPostsScreenState();
+}
+
+class _TrendingPostsScreenState extends State<TrendingPostsScreen> {
+  Timer? _liveTimer;
+  int _liveTick = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _liveTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _liveTick += 1;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _liveTimer?.cancel();
+    super.dispose();
+  }
+
+  int _postNumber(ClimbyPost post) {
+    return int.tryParse(post.id.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+  }
+
+  int _liveHotScore(ClimbyPost post) {
+    final number = _postNumber(post);
+    return post.likeCount + ((number * 17 + _liveTick * 19) % 71);
+  }
+
+  List<ClimbyPost> _liveSortedPosts(List<ClimbyPost> posts) {
+    final ordered = [...posts];
+    ordered.sort((a, b) => _liveHotScore(b).compareTo(_liveHotScore(a)));
+    return ordered;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return _CliffScreenFrame(
-      title: title,
+      title: widget.title,
       child: AnimatedBuilder(
-        animation: store,
+        animation: widget.store,
         builder: (context, _) {
-          final posts = store.visiblePosts(category: category);
-          return GridView.builder(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              MediaQuery.paddingOf(context).top + 68,
-              16,
-              24,
-            ),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.6,
-            ),
-            itemCount: posts.length,
-            itemBuilder: (context, index) {
-              return _PostTile(store: store, post: posts[index]);
-            },
+          final posts = _liveSortedPosts(
+            widget.store.visiblePosts(category: widget.category),
+          );
+          final topPadding = MediaQuery.paddingOf(context).top + 68;
+
+          if (posts.isEmpty) {
+            return ListView(
+              padding: EdgeInsets.fromLTRB(16, topPadding, 16, 24),
+              children: const [_EmptyFeedPanel()],
+            );
+          }
+
+          final featured = posts.first;
+          final gridPosts = posts.length > 1
+              ? posts.sublist(1)
+              : <ClimbyPost>[];
+
+          return CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(16, topPadding, 16, 0),
+                sliver: SliverToBoxAdapter(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 320),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    child: _TrendingHeroCard(
+                      key: ValueKey('${featured.id}-$_liveTick'),
+                      store: widget.store,
+                      post: featured,
+                      rank: 1,
+                      hotScore: _liveHotScore(featured),
+                    ),
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverToBoxAdapter(
+                  child: _TrendingPulseStrip(
+                    totalPosts: posts.length,
+                    liveScore: _liveHotScore(featured),
+                    topLikes: featured.likeCount,
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 18)),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverToBoxAdapter(
+                  child: Row(
+                    children: [
+                      const Text(
+                        'Hot Feed',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 42,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF6A1A),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              if (gridPosts.isNotEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+                  sliver: SliverGrid.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.6,
+                        ),
+                    itemCount: gridPosts.length,
+                    itemBuilder: (context, index) {
+                      final post = gridPosts[index];
+                      return _PostTile(
+                        key: ValueKey(post.id),
+                        store: widget.store,
+                        post: post,
+                      );
+                    },
+                  ),
+                ),
+            ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _TrendingHeroCard extends StatelessWidget {
+  const _TrendingHeroCard({
+    required this.store,
+    required this.post,
+    required this.rank,
+    required this.hotScore,
+    super.key,
+  });
+
+  final ClimbySocialStore store;
+  final ClimbyPost post;
+  final int rank;
+  final int hotScore;
+
+  @override
+  Widget build(BuildContext context) {
+    final user = store.userById(post.userId);
+    if (user == null) {
+      return const SizedBox.shrink();
+    }
+
+    return GestureDetector(
+      onTap: () => _openPost(context, store, post),
+      child: Container(
+        height: 232,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFD9FF00).withValues(alpha: 0.18),
+              blurRadius: 28,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(post.imageAsset, fit: BoxFit.cover),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.08),
+                      Colors.black.withValues(alpha: 0.34),
+                      Colors.black.withValues(alpha: 0.86),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 14,
+                top: 14,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.64),
+                    borderRadius: BorderRadius.circular(99),
+                    border: Border.all(
+                      color: const Color(0xFFD9FF00).withValues(alpha: 0.8),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFD9FF00),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 7),
+                      Text(
+                        'LIVE #$rank',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 14,
+                top: 14,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF6A1A),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    '$hotScore heat',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      post.caption,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 23,
+                        height: 1.04,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => _openProfile(context, store, user),
+                          child: Row(
+                            children: [
+                              _Avatar(asset: user.avatarAsset, size: 30),
+                              const SizedBox(width: 8),
+                              Text(
+                                user.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        Image.asset(
+                          'assets/images/Hangboard.png',
+                          width: 21,
+                          height: 21,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          post.likeCount.toString(),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.84),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrendingPulseStrip extends StatelessWidget {
+  const _TrendingPulseStrip({
+    required this.totalPosts,
+    required this.liveScore,
+    required this.topLikes,
+  });
+
+  final int totalPosts;
+  final int liveScore;
+  final int topLikes;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _TrendingStatPill(
+            label: 'Live Heat',
+            value: liveScore.toString(),
+            color: const Color(0xFFD9FF00),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _TrendingStatPill(
+            label: 'Posts',
+            value: totalPosts.toString(),
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _TrendingStatPill(
+            label: 'Likes',
+            value: topLikes.toString(),
+            color: const Color(0xFFFF6A1A),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TrendingStatPill extends StatelessWidget {
+  const _TrendingStatPill({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151A1B).withValues(alpha: 0.84),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.58),
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: color,
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1804,7 +2232,9 @@ class UserProfileScreen extends StatelessWidget {
                         letterSpacing: 0,
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
+                    _FollowToggleButton(store: store, user: user),
+                    const SizedBox(height: 12),
                     _ProfilePostStrip(store: store, posts: userPosts),
                     const SizedBox(height: 20),
                     Row(
@@ -2272,8 +2702,11 @@ class TrendingPostsScreenInline extends StatelessWidget {
         childAspectRatio: 0.62,
       ),
       itemCount: posts.length,
-      itemBuilder: (context, index) =>
-          _PostTile(store: store, post: posts[index]),
+      itemBuilder: (context, index) => _PostTile(
+        key: ValueKey(posts[index].id),
+        store: store,
+        post: posts[index],
+      ),
     );
   }
 }

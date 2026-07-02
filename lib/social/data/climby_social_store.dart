@@ -14,7 +14,8 @@ class ClimbySocialStore extends ChangeNotifier {
 
   static const _reportedKey = 'climby.reported.keys.v1';
   static const _blockedUsersKey = 'climby.blocked.users.v1';
-  static const _followRequestsKey = 'climby.follow.requests.v1';
+  static const _legacyFollowRequestsKey = 'climby.follow.requests.v1';
+  static const _followingKey = 'climby.following.v1';
   static const _mutualFollowsKey = 'climby.mutual.follows.v1';
   static const _messagesKey = 'climby.messages.v1';
   static const _commentsKey = 'climby.comments.v1';
@@ -23,7 +24,7 @@ class ClimbySocialStore extends ChangeNotifier {
   bool _loaded = false;
   final Set<String> _reportedKeys = {};
   final Set<String> _blockedUserIds = {};
-  final Set<String> _sentFollowRequests = {};
+  final Set<String> _followingUserIds = {};
   final Set<String> _mutualFollowUserIds = {};
   final Map<String, List<ClimbyMessage>> _messagesByUser = {};
   final Map<String, List<ClimbyComment>> _localCommentsByPost = {};
@@ -37,8 +38,15 @@ class ClimbySocialStore extends ChangeNotifier {
     _prefs = await SharedPreferences.getInstance();
     _reportedKeys.addAll(_readStringSet(_reportedKey));
     _blockedUserIds.addAll(_readStringSet(_blockedUsersKey));
-    _sentFollowRequests.addAll(_readStringSet(_followRequestsKey));
+    final legacyFollows = _readStringSet(_legacyFollowRequestsKey);
+    _followingUserIds.addAll(legacyFollows);
+    _followingUserIds.addAll(_readStringSet(_followingKey));
     _mutualFollowUserIds.addAll(_readStringSet(_mutualFollowsKey));
+    _followingUserIds.addAll(_mutualFollowUserIds);
+    if (legacyFollows.isNotEmpty) {
+      await _writeStringSet(_followingKey, _followingUserIds);
+      await _writeStringSet(_legacyFollowRequestsKey, const <String>{});
+    }
     _messagesByUser.addAll(_readMessageMap(_messagesKey));
     _localCommentsByPost.addAll(_readCommentMap(_commentsKey));
     _loaded = true;
@@ -125,7 +133,11 @@ class ClimbySocialStore extends ChangeNotifier {
   }
 
   bool isFollowRequested(String userId) {
-    return _sentFollowRequests.contains(userId);
+    return isFollowing(userId);
+  }
+
+  bool isFollowing(String userId) {
+    return _followingUserIds.contains(userId);
   }
 
   bool isMutualFollow(String userId) {
@@ -137,13 +149,33 @@ class ClimbySocialStore extends ChangeNotifier {
   }
 
   Future<void> requestFollow(String userId) async {
-    if (_blockedUserIds.contains(userId) ||
-        _mutualFollowUserIds.contains(userId)) {
+    await followUser(userId);
+  }
+
+  Future<void> followUser(String userId) async {
+    if (_blockedUserIds.contains(userId)) {
       return;
     }
-    _sentFollowRequests.add(userId);
-    await _writeStringSet(_followRequestsKey, _sentFollowRequests);
+    _followingUserIds.add(userId);
+    await _writeStringSet(_followingKey, _followingUserIds);
     notifyListeners();
+  }
+
+  Future<void> unfollowUser(String userId) async {
+    _followingUserIds.remove(userId);
+    _mutualFollowUserIds.remove(userId);
+    await _writeStringSet(_followingKey, _followingUserIds);
+    await _writeStringSet(_legacyFollowRequestsKey, const <String>{});
+    await _writeStringSet(_mutualFollowsKey, _mutualFollowUserIds);
+    notifyListeners();
+  }
+
+  Future<void> toggleFollow(String userId) async {
+    if (isFollowing(userId)) {
+      await unfollowUser(userId);
+      return;
+    }
+    await followUser(userId);
   }
 
   Future<void> addComment({
