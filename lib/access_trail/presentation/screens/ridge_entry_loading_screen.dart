@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../field_notes/presentation/screens/crag_overview_screen.dart';
 import '../../data/local_crag_access_cache.dart';
-import '../widgets/crag_image_backdrop.dart';
 
 class RidgeEntryLoadingScreen extends StatefulWidget {
   const RidgeEntryLoadingScreen({required this.cache, super.key});
@@ -48,98 +47,150 @@ class _RidgeEntryLoadingScreenState extends State<RidgeEntryLoadingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: CragImageBackdrop(
-        assetPath: 'assets/images/HarborWallBackdrop.png',
-        scrimOpacity: 0.2,
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _ropeSweep,
-            builder: (context, _) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 132,
-                    height: 132,
-                    child: CustomPaint(
-                      painter: _RopeSweepPainter(progress: _ropeSweep.value),
-                    ),
+      backgroundColor: const Color(0xFF050706),
+      body: Center(
+        child: AnimatedBuilder(
+          animation: _ropeSweep,
+          builder: (context, _) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 148,
+                  height: 178,
+                  child: CustomPaint(
+                    painter: _RouteTracePainter(progress: _ropeSweep.value),
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Setting your route',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 21,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0,
-                    ),
+                ),
+                const SizedBox(height: 26),
+                const Text(
+                  'Setting your route',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0,
                   ),
-                  const SizedBox(height: 7),
-                  Text(
-                    'Saving your local access card',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.62),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0,
-                    ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Preparing your local crag',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.58),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 }
 
-class _RopeSweepPainter extends CustomPainter {
-  const _RopeSweepPainter({required this.progress});
+class _RouteTracePainter extends CustomPainter {
+  const _RouteTracePainter({required this.progress});
 
   final double progress;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final radius = size.width * 0.42;
-    final track = Paint()
-      ..color = Colors.white.withValues(alpha: 0.18)
-      ..strokeWidth = 9
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    final rope = Paint()
-      ..shader = const SweepGradient(
-        colors: [
-          Color(0x00D6FF00),
-          Color(0xFFD6FF00),
-          Color(0xFFFFFFFF),
-          Color(0x00D6FF00),
-        ],
-      ).createShader(Rect.fromCircle(center: center, radius: radius))
-      ..strokeWidth = 9
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawCircle(center, radius, track);
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(progress * 6.28318530718);
-    canvas.translate(-center.dx, -center.dy);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -1.2,
-      2.15,
-      false,
-      rope,
+    final holds = [
+      Offset(size.width * 0.28, size.height * 0.82),
+      Offset(size.width * 0.68, size.height * 0.64),
+      Offset(size.width * 0.36, size.height * 0.43),
+      Offset(size.width * 0.72, size.height * 0.21),
+    ];
+    final routePath = Path()..moveTo(holds.first.dx, holds.first.dy);
+    routePath.cubicTo(
+      size.width * 0.5,
+      size.height * 0.76,
+      size.width * 0.48,
+      size.height * 0.68,
+      holds[1].dx,
+      holds[1].dy,
     );
-    canvas.restore();
+    routePath.cubicTo(
+      size.width * 0.83,
+      size.height * 0.5,
+      size.width * 0.25,
+      size.height * 0.58,
+      holds[2].dx,
+      holds[2].dy,
+    );
+    routePath.cubicTo(
+      size.width * 0.2,
+      size.height * 0.28,
+      size.width * 0.7,
+      size.height * 0.37,
+      holds.last.dx,
+      holds.last.dy,
+    );
+
+    final track = Paint()
+      ..color = Colors.white.withValues(alpha: 0.13)
+      ..strokeWidth = 5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final active = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.bottomLeft,
+        end: Alignment.topRight,
+        colors: [Color(0xFFD6FF00), Colors.white],
+      ).createShader(Offset.zero & size)
+      ..strokeWidth = 5.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final glow = Paint()
+      ..color = const Color(0xFFD6FF00).withValues(alpha: 0.18)
+      ..strokeWidth = 14
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    canvas.drawPath(routePath, track);
+
+    final routeMetric = routePath.computeMetrics().first;
+    final reveal = Curves.easeInOutCubic.transform(progress);
+    final activePath = routeMetric.extractPath(0, routeMetric.length * reveal);
+    canvas.drawPath(activePath, glow);
+    canvas.drawPath(activePath, active);
+
+    for (var index = 0; index < holds.length; index += 1) {
+      final holdProgress = (progress + index * 0.2) % 1;
+      final pulse = holdProgress < 0.5
+          ? Curves.easeOut.transform(holdProgress * 2)
+          : Curves.easeIn.transform((1 - holdProgress) * 2);
+      final reached = reveal >= index / (holds.length - 1);
+      final holdColor = reached
+          ? const Color(0xFFD6FF00)
+          : Colors.white.withValues(alpha: 0.2);
+
+      canvas.drawCircle(
+        holds[index],
+        reached ? 15 + pulse * 3 : 13,
+        Paint()..color = holdColor.withValues(alpha: reached ? 0.18 : 0.12),
+      );
+      canvas.drawCircle(
+        holds[index],
+        reached ? 8 + pulse * 1.5 : 7,
+        Paint()..color = holdColor,
+      );
+      if (reached) {
+        canvas.drawCircle(
+          holds[index] + const Offset(-2, -2),
+          2.4,
+          Paint()..color = Colors.white.withValues(alpha: 0.84),
+        );
+      }
+    }
   }
 
   @override
-  bool shouldRepaint(covariant _RopeSweepPainter oldDelegate) {
+  bool shouldRepaint(covariant _RouteTracePainter oldDelegate) {
     return oldDelegate.progress != progress;
   }
 }

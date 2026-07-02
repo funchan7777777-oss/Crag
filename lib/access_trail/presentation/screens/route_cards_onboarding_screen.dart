@@ -27,11 +27,11 @@ class _RouteCardsOnboardingScreenState
     ),
     _RouteCardFrame(
       imageAsset: 'assets/images/Ridge.png',
-      buttonAsset: 'assets/images/Chalk.png',
+      buttonAsset: 'assets/images/Arete.png',
     ),
     _RouteCardFrame(
       imageAsset: 'assets/images/Summit.png',
-      buttonAsset: 'assets/images/Pinch.png',
+      buttonAsset: 'assets/images/Arete.png',
     ),
   ];
 
