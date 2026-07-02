@@ -40,23 +40,26 @@ class _CragHomeTabsScreenState extends State<CragHomeTabsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: LedgePalette.chalkWhite,
-      body: IndexedStack(
-        index: _activeIndex,
-        children: const [
-          CragOverviewScreen(),
-          _CragTabPlaceholder(
-            title: 'League',
-            iconAsset: 'assets/images/Squad.png',
-          ),
-          _CragTabPlaceholder(
-            title: 'Signal',
-            iconAsset: 'assets/images/Profile.png',
-          ),
-          _CragTabPlaceholder(
-            title: 'Route',
-            iconAsset: 'assets/images/Send.png',
-          ),
-        ],
+      body: CragTabSwitcher(
+        selectTab: (index) => setState(() => _activeIndex = index),
+        child: IndexedStack(
+          index: _activeIndex,
+          children: const [
+            CragOverviewScreen(),
+            _CragTabPlaceholder(
+              title: 'League',
+              iconAsset: 'assets/images/Squad.png',
+            ),
+            _CragTabPlaceholder(
+              title: 'Signal',
+              iconAsset: 'assets/images/Profile.png',
+            ),
+            _CragTabPlaceholder(
+              title: 'Route',
+              iconAsset: 'assets/images/Send.png',
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: _CragBottomTabBar(
         activeIndex: _activeIndex,
@@ -64,6 +67,25 @@ class _CragHomeTabsScreenState extends State<CragHomeTabsScreen> {
         onTabSelected: (index) => setState(() => _activeIndex = index),
       ),
     );
+  }
+}
+
+class CragTabSwitcher extends InheritedWidget {
+  const CragTabSwitcher({
+    required this.selectTab,
+    required super.child,
+    super.key,
+  });
+
+  final ValueChanged<int> selectTab;
+
+  static CragTabSwitcher? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<CragTabSwitcher>();
+  }
+
+  @override
+  bool updateShouldNotify(CragTabSwitcher oldWidget) {
+    return selectTab != oldWidget.selectTab;
   }
 }
 
@@ -151,7 +173,7 @@ class _CragTabPlaceholder extends StatelessWidget {
     return ColoredBox(
       color: LedgePalette.chalkWhite,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(20, topInset + 18, 20, 24),
+        padding: EdgeInsets.fromLTRB(20, topInset + 6, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

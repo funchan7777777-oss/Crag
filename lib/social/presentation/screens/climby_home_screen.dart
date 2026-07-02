@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../field_notes/presentation/screens/crag_home_tabs_screen.dart';
 import '../../data/climby_social_store.dart';
 import 'climby_chat_screen.dart';
 import 'moderation_report_screen.dart';
@@ -344,15 +345,15 @@ class _FeatureDock extends StatelessWidget {
       _HomeFeature(
         label: 'Videos',
         asset: 'assets/images/Beta.png',
-        onTap: () => _push(
-          context,
-          TrendingPostsScreen(store: store, title: 'Videos', category: 'Video'),
-        ),
+        onTap: () => CragTabSwitcher.of(context)?.selectTab(1),
       ),
       _HomeFeature(
         label: 'Community',
         asset: 'assets/images/Nut.png',
-        onTap: () => _push(context, CommunityHubScreen(store: store)),
+        onTap: () => _push(
+          context,
+          TrendingPostsScreen(store: store, title: 'Community'),
+        ),
       ),
     ];
 
@@ -564,6 +565,7 @@ class _PostTileState extends State<_PostTile> {
   @override
   Widget build(BuildContext context) {
     final user = widget.store.userById(widget.post.userId);
+    final likeCount = widget.post.likeCount + (_liked ? 1 : 0);
     if (user == null) {
       return const SizedBox.shrink();
     }
@@ -634,7 +636,7 @@ class _PostTileState extends State<_PostTile> {
               ),
               const SizedBox(width: 4),
               Text(
-                _liked ? '1' : '0',
+                likeCount.toString(),
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.62),
                   fontSize: 11,
@@ -1408,11 +1410,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       bottom: _CommentComposer(
         controller: _commentController,
         onSend: _addComment,
+        showLeading: false,
       ),
       child: AnimatedBuilder(
         animation: widget.store,
         builder: (context, _) {
           final comments = widget.store.commentsFor(widget.post.id);
+          final likeCount = widget.post.likeCount + (_liked ? 1 : 0);
           return ListView(
             padding: EdgeInsets.fromLTRB(
               16,
@@ -1493,7 +1497,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    _liked ? '1' : '0',
+                    likeCount.toString(),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.7),
                       fontWeight: FontWeight.w800,
@@ -1588,10 +1592,15 @@ class _CommentRow extends StatelessWidget {
 }
 
 class _CommentComposer extends StatelessWidget {
-  const _CommentComposer({required this.controller, required this.onSend});
+  const _CommentComposer({
+    required this.controller,
+    required this.onSend,
+    this.showLeading = true,
+  });
 
   final TextEditingController controller;
   final VoidCallback onSend;
+  final bool showLeading;
 
   @override
   Widget build(BuildContext context) {
@@ -1609,13 +1618,15 @@ class _CommentComposer extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Image.asset(
-              'assets/images/Campus.png',
-              width: 22,
-              height: 22,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(width: 8),
+            if (showLeading) ...[
+              Image.asset(
+                'assets/images/Campus.png',
+                width: 22,
+                height: 22,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(width: 8),
+            ],
             Expanded(
               child: TextField(
                 controller: controller,
@@ -1671,11 +1682,21 @@ class UserProfileScreen extends StatelessWidget {
       body: AnimatedBuilder(
         animation: store,
         builder: (context, _) {
-          final requested = store.isFollowRequested(user.id);
           return Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset(user.avatarAsset, fit: BoxFit.cover),
+              Image.asset('assets/images/Invite.png', fit: BoxFit.fill),
+              Positioned(
+                left: 0,
+                right: 0,
+                top: topInset + 210,
+                bottom: 0,
+                child: Image.asset(
+                  user.avatarAsset,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                ),
+              ),
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -1684,7 +1705,7 @@ class UserProfileScreen extends StatelessWidget {
                     colors: [
                       Colors.black.withValues(alpha: 0.15),
                       Colors.black.withValues(alpha: 0.06),
-                      Colors.black.withValues(alpha: 0.62),
+                      Colors.black.withValues(alpha: 0.72),
                     ],
                   ),
                 ),
@@ -1703,17 +1724,6 @@ class UserProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    IconButton(
-                      onPressed: () => store.requestFollow(user.id),
-                      icon: Image.asset(
-                        requested
-                            ? 'assets/images/Hangboard.png'
-                            : 'assets/images/Edge.png',
-                        width: 30,
-                        height: 30,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
                     IconButton(
                       onPressed: () => openModerationScreen(
                         context: context,
@@ -1739,13 +1749,24 @@ class UserProfileScreen extends StatelessWidget {
                 bottom: MediaQuery.paddingOf(context).bottom + 22,
                 child: Column(
                   children: [
-                    Image.asset(
-                      'assets/images/Invite.png',
-                      width: 136,
-                      height: 56,
-                      fit: BoxFit.contain,
+                    Container(
+                      width: 84,
+                      height: 84,
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.92),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.32),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: _Avatar(asset: user.avatarAsset, size: 78),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     Text(
                       user.name,
                       style: const TextStyle(
@@ -1867,9 +1888,27 @@ class AiCoachScreen extends StatefulWidget {
 
 class _AiCoachScreenState extends State<AiCoachScreen> {
   final _controller = TextEditingController();
-  final List<String> _notes = [
-    'Hi, I am your AI Climbing Coach. Ready to improve your climbing skills today?',
+  final List<_AiCoachMessage> _notes = [
+    const _AiCoachMessage(
+      text:
+          'Hi, I am your AI Climbing Coach. Ready to improve your climbing skills today?',
+      sentByMe: false,
+    ),
   ];
+  final List<String> _coachReplies = const [
+    'Start with one movement cue: quiet feet. Climb an easy route and make every foot placement silent before you try harder grades.',
+    'For your next session, warm up on three climbs below your limit, then choose one project and give it three focused attempts with long rests.',
+    'If the crux feels powerful, slow the move before it. Most failed attempts happen because the setup position is rushed.',
+    'Try this drill: pause for two seconds before each hand move. It forces better balance and shows where your feet are doing too little.',
+    'For overhangs, keep your hips close and pull with your toes before you reach. Think tension first, reach second.',
+    'If your forearms pump out quickly, add route-reading breaks. Plan clipping stances and shake points before you leave the ground.',
+    'When a move feels impossible, change only one variable per attempt: foot position, hip angle, or hand timing. That keeps beta clear.',
+    'A good training day is not maximum effort all day. Mix skill work, one hard block, then finish with easy volume.',
+    'For slabs, trust the shoe and stand taller. Bent arms often mean you are pulling away from the wall instead of weighting your feet.',
+    'Log your attempts with three notes: what worked, what failed, and one cue for next time. That makes progress visible.',
+  ];
+  bool _isTyping = false;
+  int _replyIndex = 0;
 
   @override
   void dispose() {
@@ -1877,17 +1916,31 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
     super.dispose();
   }
 
-  void _send() {
+  Future<void> _send() async {
     final text = _controller.text.trim();
-    if (text.isEmpty) {
+    if (text.isEmpty || _isTyping) {
       return;
     }
     setState(() {
-      _notes.add(text);
-      _notes.add(
-        'Focus on one movement cue, then log how it felt after the climb.',
-      );
+      _notes.add(_AiCoachMessage(text: text, sentByMe: true));
+      _isTyping = true;
       _controller.clear();
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 950));
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _notes.add(
+        _AiCoachMessage(
+          text: _coachReplies[_replyIndex % _coachReplies.length],
+          sentByMe: false,
+        ),
+      );
+      _replyIndex += 1;
+      _isTyping = false;
     });
   }
 
@@ -1897,20 +1950,34 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     return _CliffScreenFrame(
       title: 'AI Coach',
-      bottom: _CommentComposer(controller: _controller, onSend: _send),
+      backgroundAsset: 'assets/images/Vibe.png',
+      backgroundFit: BoxFit.fill,
+      bottom: _CommentComposer(
+        controller: _controller,
+        onSend: _send,
+        showLeading: false,
+      ),
       child: ListView.separated(
         padding: EdgeInsets.fromLTRB(16, topInset + 74, 16, bottomInset + 92),
-        itemCount: _notes.length,
+        itemCount: _notes.length + (_isTyping ? 1 : 0),
         separatorBuilder: (_, _) => const SizedBox(height: 14),
         itemBuilder: (context, index) {
-          final mine = index.isOdd;
+          if (_isTyping && index == _notes.length) {
+            return const Align(
+              alignment: Alignment.centerLeft,
+              child: _AiTypingBubble(),
+            );
+          }
+          final note = _notes[index];
           return Align(
-            alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+            alignment: note.sentByMe
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 270),
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: mine
+                  color: note.sentByMe
                       ? const Color(0xFF2E3A3B)
                       : const Color(0xFF1B2021),
                   borderRadius: BorderRadius.circular(10),
@@ -1918,7 +1985,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Text(
-                    _notes[index],
+                    note.text,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -1933,6 +2000,87 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+class _AiCoachMessage {
+  const _AiCoachMessage({required this.text, required this.sentByMe});
+
+  final String text;
+  final bool sentByMe;
+}
+
+class _AiTypingBubble extends StatelessWidget {
+  const _AiTypingBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B2021),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _TypingDot(delay: 0),
+            const SizedBox(width: 5),
+            _TypingDot(delay: 160),
+            const SizedBox(width: 5),
+            _TypingDot(delay: 320),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TypingDot extends StatefulWidget {
+  const _TypingDot({required this.delay});
+
+  final int delay;
+
+  @override
+  State<_TypingDot> createState() => _TypingDotState();
+}
+
+class _TypingDotState extends State<_TypingDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _opacity = Tween<double>(
+      begin: 0.35,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    Future<void>.delayed(Duration(milliseconds: widget.delay), () {
+      if (mounted) {
+        _controller.repeat(reverse: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: const CircleAvatar(radius: 3, backgroundColor: Color(0xFFD6FF00)),
     );
   }
 }
@@ -2099,12 +2247,16 @@ class _CliffScreenFrame extends StatelessWidget {
     required this.title,
     required this.child,
     this.actions = const [],
+    this.backgroundAsset = 'assets/images/HarborWallBackdrop.png',
+    this.backgroundFit = BoxFit.cover,
     this.bottom,
   });
 
   final String title;
   final Widget child;
   final List<Widget> actions;
+  final String backgroundAsset;
+  final BoxFit backgroundFit;
   final Widget? bottom;
 
   @override
@@ -2115,10 +2267,7 @@ class _CliffScreenFrame extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            'assets/images/HarborWallBackdrop.png',
-            fit: BoxFit.cover,
-          ),
+          Image.asset(backgroundAsset, fit: backgroundFit),
           DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.12),

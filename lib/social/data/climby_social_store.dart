@@ -313,6 +313,7 @@ class ClimbyPost {
     required this.caption,
     required this.category,
     required this.timeAgo,
+    required this.likeCount,
   });
 
   final String id;
@@ -321,6 +322,7 @@ class ClimbyPost {
   final String caption;
   final String category;
   final String timeAgo;
+  final int likeCount;
 }
 
 class ClimbySpot {
@@ -603,6 +605,7 @@ const seedPosts = [
     caption: 'Finally sent my project!',
     category: 'Outdoor',
     timeAgo: '2h ago',
+    likeCount: 128,
   ),
   ClimbyPost(
     id: 'p02',
@@ -611,6 +614,7 @@ const seedPosts = [
     caption: 'Coordination day paid off.',
     category: 'Bouldering',
     timeAgo: '4h ago',
+    likeCount: 64,
   ),
   ClimbyPost(
     id: 'p03',
@@ -619,6 +623,7 @@ const seedPosts = [
     caption: 'Warmup laps before work.',
     category: 'Training',
     timeAgo: '5h ago',
+    likeCount: 37,
   ),
   ClimbyPost(
     id: 'p04',
@@ -627,6 +632,7 @@ const seedPosts = [
     caption: 'Roof sequence finally clicked.',
     category: 'Bouldering',
     timeAgo: '6h ago',
+    likeCount: 92,
   ),
   ClimbyPost(
     id: 'p05',
@@ -635,6 +641,7 @@ const seedPosts = [
     caption: 'Clean finish, clean day.',
     category: 'Outdoor',
     timeAgo: '8h ago',
+    likeCount: 156,
   ),
   ClimbyPost(
     id: 'p06',
@@ -643,6 +650,7 @@ const seedPosts = [
     caption: 'Small feet, big trust.',
     category: 'Training',
     timeAgo: '9h ago',
+    likeCount: 48,
   ),
   ClimbyPost(
     id: 'p07',
@@ -651,6 +659,7 @@ const seedPosts = [
     caption: 'Cave session with fresh tape.',
     category: 'Bouldering',
     timeAgo: '10h ago',
+    likeCount: 83,
   ),
   ClimbyPost(
     id: 'p08',
@@ -659,6 +668,7 @@ const seedPosts = [
     caption: 'Partner checks before every burn.',
     category: 'Video',
     timeAgo: '12h ago',
+    likeCount: 214,
   ),
   ClimbyPost(
     id: 'p09',
@@ -667,6 +677,7 @@ const seedPosts = [
     caption: 'Press, breathe, reset.',
     category: 'Bouldering',
     timeAgo: '1d ago',
+    likeCount: 76,
   ),
   ClimbyPost(
     id: 'p10',
@@ -675,6 +686,7 @@ const seedPosts = [
     caption: 'Clipped smooth at the crux.',
     category: 'Outdoor',
     timeAgo: '1d ago',
+    likeCount: 119,
   ),
   ClimbyPost(
     id: 'p11',
@@ -683,6 +695,7 @@ const seedPosts = [
     caption: 'Purple wall felt wild.',
     category: 'Training',
     timeAgo: '1d ago',
+    likeCount: 51,
   ),
   ClimbyPost(
     id: 'p12',
@@ -691,6 +704,7 @@ const seedPosts = [
     caption: 'Partner beta changed everything.',
     category: 'Bouldering',
     timeAgo: '2d ago',
+    likeCount: 97,
   ),
   ClimbyPost(
     id: 'p13',
@@ -699,6 +713,7 @@ const seedPosts = [
     caption: 'One more overhang attempt.',
     category: 'Training',
     timeAgo: '2d ago',
+    likeCount: 68,
   ),
   ClimbyPost(
     id: 'p14',
@@ -707,6 +722,7 @@ const seedPosts = [
     caption: 'Yellow holds, calm feet.',
     category: 'Indoor',
     timeAgo: '2d ago',
+    likeCount: 145,
   ),
   ClimbyPost(
     id: 'p15',
@@ -715,6 +731,7 @@ const seedPosts = [
     caption: 'Rest day turned into drills.',
     category: 'Training',
     timeAgo: '3d ago',
+    likeCount: 33,
   ),
   ClimbyPost(
     id: 'p16',
@@ -723,6 +740,7 @@ const seedPosts = [
     caption: 'Cross move stayed honest.',
     category: 'Indoor',
     timeAgo: '3d ago',
+    likeCount: 88,
   ),
 ];
 
@@ -845,6 +863,230 @@ const seedComments = [
     userId: 'clara',
     text: 'Partner check habits matter.',
     createdLabel: '5h ago',
+  ),
+  ClimbyComment(
+    id: 'pc01',
+    postId: 'p01',
+    userId: 'sophia',
+    text: 'That final body position looks so controlled.',
+    createdLabel: '38m ago',
+  ),
+  ClimbyComment(
+    id: 'pc02',
+    postId: 'p02',
+    userId: 'lina',
+    text: 'The timing on that coordination move is clean.',
+    createdLabel: '51m ago',
+  ),
+  ClimbyComment(
+    id: 'pc03',
+    postId: 'p02',
+    userId: 'kai',
+    text: 'Love how you stayed low before committing to the catch.',
+    createdLabel: '1h ago',
+  ),
+  ClimbyComment(
+    id: 'pc04',
+    postId: 'p03',
+    userId: 'theo',
+    text: 'Good call getting rope laps in before the gym gets crowded.',
+    createdLabel: '42m ago',
+  ),
+  ClimbyComment(
+    id: 'pc05',
+    postId: 'p03',
+    userId: 'clara',
+    text: 'Those warmup laps look steady. Nice breathing rhythm.',
+    createdLabel: '2h ago',
+  ),
+  ClimbyComment(
+    id: 'pc06',
+    postId: 'p03',
+    userId: 'iris',
+    text: 'I need to copy this before-work routine.',
+    createdLabel: '3h ago',
+  ),
+  ClimbyComment(
+    id: 'pc07',
+    postId: 'p04',
+    userId: 'eli',
+    text: 'Roof beta finally clicking is the best feeling.',
+    createdLabel: '29m ago',
+  ),
+  ClimbyComment(
+    id: 'pc08',
+    postId: 'p04',
+    userId: 'zoe',
+    text: 'That heel tension looks like it saved the whole sequence.',
+    createdLabel: '1h ago',
+  ),
+  ClimbyComment(
+    id: 'pc09',
+    postId: 'p05',
+    userId: 'maya',
+    text: 'Clean finish and still smiling. Strong day.',
+    createdLabel: '47m ago',
+  ),
+  ClimbyComment(
+    id: 'pc10',
+    postId: 'p05',
+    userId: 'ava',
+    text: 'That top-out energy is perfect.',
+    createdLabel: '2h ago',
+  ),
+  ClimbyComment(
+    id: 'pc11',
+    postId: 'p06',
+    userId: 'nora',
+    text: 'Tiny feet on slab always make me nervous.',
+    createdLabel: '54m ago',
+  ),
+  ClimbyComment(
+    id: 'pc12',
+    postId: 'p06',
+    userId: 'theo',
+    text: 'Trusting that foothold takes real patience.',
+    createdLabel: '2h ago',
+  ),
+  ClimbyComment(
+    id: 'pc13',
+    postId: 'p07',
+    userId: 'rhea',
+    text: 'Fresh tape means the cave session got serious.',
+    createdLabel: '25m ago',
+  ),
+  ClimbyComment(
+    id: 'pc14',
+    postId: 'p07',
+    userId: 'luca',
+    text: 'That match looks powerful. Hope the skin survived.',
+    createdLabel: '1h ago',
+  ),
+  ClimbyComment(
+    id: 'pc15',
+    postId: 'p08',
+    userId: 'noah',
+    text: 'Belay checks before every burn. Exactly right.',
+    createdLabel: '39m ago',
+  ),
+  ClimbyComment(
+    id: 'pc16',
+    postId: 'p08',
+    userId: 'maya',
+    text: 'Partner habits like this make hard sessions feel safer.',
+    createdLabel: '2h ago',
+  ),
+  ClimbyComment(
+    id: 'pc17',
+    postId: 'p09',
+    userId: 'alex',
+    text: 'Press moves always expose whether the feet are working.',
+    createdLabel: '33m ago',
+  ),
+  ClimbyComment(
+    id: 'pc18',
+    postId: 'p09',
+    userId: 'lina',
+    text: 'The reset before the press is such a useful cue.',
+    createdLabel: '1h ago',
+  ),
+  ClimbyComment(
+    id: 'pc19',
+    postId: 'p10',
+    userId: 'clara',
+    text: 'Smooth clipping at the crux is a skill by itself.',
+    createdLabel: '44m ago',
+  ),
+  ClimbyComment(
+    id: 'pc20',
+    postId: 'p10',
+    userId: 'eli',
+    text: 'Nice stance. You looked calm before the clip.',
+    createdLabel: '2h ago',
+  ),
+  ClimbyComment(
+    id: 'pc21',
+    postId: 'p11',
+    userId: 'zoe',
+    text: 'Purple wall problems always look chaotic in the best way.',
+    createdLabel: '58m ago',
+  ),
+  ClimbyComment(
+    id: 'pc22',
+    postId: 'p11',
+    userId: 'kai',
+    text: 'That crux probably needs more hip than arm.',
+    createdLabel: '3h ago',
+  ),
+  ClimbyComment(
+    id: 'pc23',
+    postId: 'p12',
+    userId: 'sophia',
+    text: 'Good beta partners change the whole session.',
+    createdLabel: '27m ago',
+  ),
+  ClimbyComment(
+    id: 'pc24',
+    postId: 'p12',
+    userId: 'nora',
+    text: 'The new foot sequence makes that move look much smoother.',
+    createdLabel: '2h ago',
+  ),
+  ClimbyComment(
+    id: 'pc25',
+    postId: 'p13',
+    userId: 'maya',
+    text: 'One more attempt is always how overhang days go.',
+    createdLabel: '46m ago',
+  ),
+  ClimbyComment(
+    id: 'pc26',
+    postId: 'p13',
+    userId: 'eli',
+    text: 'Keep the hips tucked and that reach will feel shorter.',
+    createdLabel: '2h ago',
+  ),
+  ClimbyComment(
+    id: 'pc27',
+    postId: 'p14',
+    userId: 'ava',
+    text: 'Yellow holds and calm feet is a whole mood.',
+    createdLabel: '31m ago',
+  ),
+  ClimbyComment(
+    id: 'pc28',
+    postId: 'p14',
+    userId: 'iris',
+    text: 'Looks like a perfect vertical project for footwork.',
+    createdLabel: '1h ago',
+  ),
+  ClimbyComment(
+    id: 'pc29',
+    postId: 'p15',
+    userId: 'theo',
+    text: 'Rest day drills still count as rest if you keep it easy, right?',
+    createdLabel: '50m ago',
+  ),
+  ClimbyComment(
+    id: 'pc30',
+    postId: 'p15',
+    userId: 'noah',
+    text: 'Technique mileage on rest days pays off later.',
+    createdLabel: '2h ago',
+  ),
+  ClimbyComment(
+    id: 'pc31',
+    postId: 'p16',
+    userId: 'rhea',
+    text: 'That cross move looks balanced, not desperate.',
+    createdLabel: '36m ago',
+  ),
+  ClimbyComment(
+    id: 'pc32',
+    postId: 'p16',
+    userId: 'luca',
+    text: 'Honest cross moves always force better core tension.',
+    createdLabel: '3h ago',
   ),
   ClimbyComment(
     id: 'sc01',
