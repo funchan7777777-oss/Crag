@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Crag uses the camera only when you choose to take a profile photo.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Crag uses your photo library only when you choose a profile image.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Crag may save edited profile images you choose to keep locally.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

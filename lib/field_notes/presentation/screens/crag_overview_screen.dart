@@ -28,48 +28,46 @@ class _CragOverviewScreenState extends State<CragOverviewScreen> {
     final activeSector = _sectorLedger[_activeSectorIndex];
 
     return Scaffold(
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: CragFieldHeader(
-                weatherWindow: HighlandCragNotebook.weatherWindow,
-                visibleSectorCount: _sectorLedger.length,
-              ),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: CragFieldHeader(
+              weatherWindow: HighlandCragNotebook.weatherWindow,
+              visibleSectorCount: _sectorLedger.length,
             ),
-            SliverToBoxAdapter(
-              child: SectorSelectorRibbon(
-                sectorLedger: _sectorLedger,
-                selectedSectorIndex: _activeSectorIndex,
-                onSectorPressed: (index) {
-                  setState(() => _activeSectorIndex = index);
-                },
-              ),
+          ),
+          SliverToBoxAdapter(
+            child: SectorSelectorRibbon(
+              sectorLedger: _sectorLedger,
+              selectedSectorIndex: _activeSectorIndex,
+              onSectorPressed: (index) {
+                setState(() => _activeSectorIndex = index);
+              },
             ),
-            SliverToBoxAdapter(
-              child: NotesSectionTitle(
-                eyebrow: 'Current read',
-                heading: activeSector.sectorHandle,
-                trailingNote: activeSector.aspectBySun,
-              ),
+          ),
+          SliverToBoxAdapter(
+            child: NotesSectionTitle(
+              eyebrow: 'Current read',
+              heading: activeSector.sectorHandle,
+              trailingNote: activeSector.aspectBySun,
             ),
-            SliverToBoxAdapter(
-              child: ConditionMarkerRail(sectorRecord: activeSector),
+          ),
+          SliverToBoxAdapter(
+            child: ConditionMarkerRail(sectorRecord: activeSector),
+          ),
+          SliverToBoxAdapter(
+            child: WeatherWindowPanel(
+              weatherMarker: HighlandCragNotebook.weatherWindow,
             ),
-            SliverToBoxAdapter(
-              child: WeatherWindowPanel(
-                weatherMarker: HighlandCragNotebook.weatherWindow,
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: ApproachMemoryPanel(brief: activeSector.approachThread),
-            ),
-            SliverToBoxAdapter(
-              child: SectorStoryCard(sectorRecord: activeSector),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 28)),
-          ],
-        ),
+          ),
+          SliverToBoxAdapter(
+            child: ApproachMemoryPanel(brief: activeSector.approachThread),
+          ),
+          SliverToBoxAdapter(
+            child: SectorStoryCard(sectorRecord: activeSector),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
+        ],
       ),
     );
   }
