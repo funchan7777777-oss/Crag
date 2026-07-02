@@ -56,14 +56,18 @@ class ClimbySocialStore extends ChangeNotifier {
   }
 
   List<ClimbyPost> visiblePosts({String? category}) {
-    return seedPosts.where((post) {
-      if (category != null && category != 'All' && post.category != category) {
-        return false;
-      }
-      return !_blockedUserIds.contains(post.userId) &&
-          !_reportedKeys.contains('post:${post.id}') &&
-          !_reportedKeys.contains('user:${post.userId}');
-    }).toList(growable: false);
+    return seedPosts
+        .where((post) {
+          if (category != null &&
+              category != 'All' &&
+              post.category != category) {
+            return false;
+          }
+          return !_blockedUserIds.contains(post.userId) &&
+              !_reportedKeys.contains('post:${post.id}') &&
+              !_reportedKeys.contains('user:${post.userId}');
+        })
+        .toList(growable: false);
   }
 
   List<ClimbySpot> get visibleSpots {
@@ -77,11 +81,13 @@ class ClimbySocialStore extends ChangeNotifier {
       ...seedComments.where((comment) => comment.postId == postId),
       ...?_localCommentsByPost[postId],
     ];
-    return comments.where((comment) {
-      return !_reportedKeys.contains('comment:${comment.id}') &&
-          !_blockedUserIds.contains(comment.userId) &&
-          !_reportedKeys.contains('user:${comment.userId}');
-    }).toList(growable: false);
+    return comments
+        .where((comment) {
+          return !_reportedKeys.contains('comment:${comment.id}') &&
+              !_blockedUserIds.contains(comment.userId) &&
+              !_reportedKeys.contains('user:${comment.userId}');
+        })
+        .toList(growable: false);
   }
 
   List<ClimbyMessage> messagesFor(String userId) {
@@ -131,7 +137,8 @@ class ClimbySocialStore extends ChangeNotifier {
   }
 
   Future<void> requestFollow(String userId) async {
-    if (_blockedUserIds.contains(userId) || _mutualFollowUserIds.contains(userId)) {
+    if (_blockedUserIds.contains(userId) ||
+        _mutualFollowUserIds.contains(userId)) {
       return;
     }
     _sentFollowRequests.add(userId);

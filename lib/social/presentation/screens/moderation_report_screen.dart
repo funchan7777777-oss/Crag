@@ -117,10 +117,7 @@ class _ModerationReportScreenState extends State<ModerationReportScreen> {
   String _selectedReason = reportReasons.first;
 
   Future<void> _report() async {
-    await widget.store.report(
-      target: widget.target,
-      reason: _selectedReason,
-    );
+    await widget.store.report(target: widget.target, reason: _selectedReason);
     if (!mounted) {
       return;
     }

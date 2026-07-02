@@ -27,7 +27,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Crag uses the camera only when you choose to take a profile photo.</string>
+	<string>Crag uses the camera for profile photos and local video call preview.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Crag uses the microphone only when you start a video call.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Crag uses your photo library only when you choose a profile image.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
