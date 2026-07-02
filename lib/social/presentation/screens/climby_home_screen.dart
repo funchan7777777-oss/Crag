@@ -390,21 +390,30 @@ class _HomeFeature extends StatelessWidget {
         child: SizedBox(
           height: 96,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Image.asset(asset, width: 51, height: 48, fit: BoxFit.contain),
+              SizedBox(
+                width: 51,
+                height: 48,
+                child: Image.asset(asset, fit: BoxFit.fill),
+              ),
               const SizedBox(height: 8),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  height: 1.2,
-                  letterSpacing: 0,
+              SizedBox(
+                height: 34,
+                child: Center(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      height: 1.2,
+                      letterSpacing: 0,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -426,21 +435,25 @@ class _HomeActionGrid extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       child: Row(
         children: [
-          Expanded(
+          SizedBox(
+            width: 173,
+            height: 142,
             child: GestureDetector(
               onTap: () => _push(context, PartnerListScreen(store: store)),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.asset(
                   'assets/images/Flow.png',
-                  height: 112,
+                  width: 173,
+                  height: 142,
                   fit: BoxFit.fill,
                 ),
               ),
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(
+          SizedBox(
+            width: 171,
             child: Column(
               children: [
                 _ImagePillButton(
@@ -476,12 +489,7 @@ class _ImagePillButton extends StatelessWidget {
       onTap: onTap,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Image.asset(
-          asset,
-          height: 50,
-          width: double.infinity,
-          fit: BoxFit.fill,
-        ),
+        child: Image.asset(asset, width: 171, height: 64, fit: BoxFit.fill),
       ),
     );
   }
@@ -829,12 +837,6 @@ class SpotDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final post = store.visiblePosts().firstWhere(
-      (item) => item.imageAsset == spot.imageAsset,
-      orElse: () => seedPosts.first,
-    );
-    final user = store.userById(post.userId);
-
     return _CliffScreenFrame(
       title: spot.title,
       actions: [
@@ -851,61 +853,267 @@ class SpotDetailScreen extends StatelessWidget {
           icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
         ),
       ],
-      child: ListView(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          MediaQuery.paddingOf(context).top + 92,
-          16,
-          24,
+      child: AnimatedBuilder(
+        animation: store,
+        builder: (context, _) {
+          final comments = store.commentsFor('spot:${spot.id}');
+          return ListView(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              MediaQuery.paddingOf(context).top + 82,
+              16,
+              28,
+            ),
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: SizedBox(
+                  height: 292,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset(spot.imageAsset, fit: BoxFit.cover),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.05),
+                              Colors.black.withValues(alpha: 0.72),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 18,
+                        right: 18,
+                        bottom: 18,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              spot.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 8,
+                              children: [
+                                _DetailMetric(
+                                  asset: 'assets/images/Traverse.png',
+                                  text: spot.location,
+                                ),
+                                _DetailMetric(
+                                  asset: 'assets/images/Chat.png',
+                                  text: '${spot.climbers} Climbers',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  _SpotDetailStat(
+                    label: 'Rating',
+                    value: spot.rating,
+                    icon: Icons.star_rounded,
+                  ),
+                  const SizedBox(width: 10),
+                  _SpotDetailStat(
+                    label: 'Style',
+                    value: spot.style,
+                    icon: Icons.terrain_rounded,
+                  ),
+                  const SizedBox(width: 10),
+                  _SpotDetailStat(
+                    label: 'Crowd',
+                    value: spot.climbers,
+                    icon: Icons.groups_rounded,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              _SpotInfoPanel(
+                title: 'About this spot',
+                child: Text(
+                  spot.description,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.82),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    height: 1.38,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const _SpotInfoPanel(
+                title: 'Good for',
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _SpotTag(text: 'Partner meetups'),
+                    _SpotTag(text: 'Fresh resets'),
+                    _SpotTag(text: 'Evening sessions'),
+                    _SpotTag(text: 'Skill progression'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              _SpotInfoPanel(
+                title: 'Comments',
+                child: comments.isEmpty
+                    ? Text(
+                        'No visible comments yet.',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.68),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0,
+                        ),
+                      )
+                    : Column(
+                        children: [
+                          for (final comment in comments)
+                            _CommentRow(store: store, comment: comment),
+                        ],
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SpotDetailStat extends StatelessWidget {
+  const _SpotDetailStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF151A1B).withValues(alpha: 0.88),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         ),
+        child: Column(
+          children: [
+            Icon(icon, color: const Color(0xFFD6FF00), size: 20),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.58),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SpotInfoPanel extends StatelessWidget {
+  const _SpotInfoPanel({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151A1B).withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            spot.title,
+            title,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 21,
+              fontSize: 16,
               fontWeight: FontWeight.w900,
               letterSpacing: 0,
             ),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _DetailMetric(
-                asset: 'assets/images/Traverse.png',
-                text: spot.location,
-              ),
-              const SizedBox(width: 14),
-              _DetailMetric(
-                asset: 'assets/images/Chat.png',
-                text: '${spot.climbers} Climbers',
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Image.asset(spot.imageAsset, height: 300, fit: BoxFit.cover),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            spot.description,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.84),
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              height: 1.4,
-              letterSpacing: 0,
-            ),
-          ),
-          const SizedBox(height: 24),
-          if (user != null)
-            _CommentPreview(
-              store: store,
-              user: user,
-              text: 'See you at the gym!',
-            ),
+          const SizedBox(height: 12),
+          child,
         ],
+      ),
+    );
+  }
+}
+
+class _SpotTag extends StatelessWidget {
+  const _SpotTag({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFD6FF00).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: const Color(0xFFD6FF00).withValues(alpha: 0.4),
+        ),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Color(0xFFD6FF00),
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0,
+        ),
       ),
     );
   }
@@ -1880,57 +2088,6 @@ class TrendingPostsScreenInline extends StatelessWidget {
       itemCount: posts.length,
       itemBuilder: (context, index) =>
           _PostTile(store: store, post: posts[index]),
-    );
-  }
-}
-
-class _CommentPreview extends StatelessWidget {
-  const _CommentPreview({
-    required this.store,
-    required this.user,
-    required this.text,
-  });
-
-  final ClimbySocialStore store;
-  final ClimbyUser user;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _openProfile(context, store, user),
-      child: Row(
-        children: [
-          _Avatar(asset: user.avatarAsset, size: 48),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  text,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.62),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
