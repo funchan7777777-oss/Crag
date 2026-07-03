@@ -1500,6 +1500,7 @@ class _PendingPostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final boosted = post.status == 'boosted';
     return GestureDetector(
       onTap: () => showCragNoticeDialog(
         context: context,
@@ -1538,11 +1539,13 @@ class _PendingPostCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFD6FF00),
+                      color: boosted
+                          ? const Color(0xFFFF6A1D)
+                          : const Color(0xFFD6FF00),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'Reviewing',
+                    child: Text(
+                      boosted ? 'Boosted' : 'Reviewing',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 11,

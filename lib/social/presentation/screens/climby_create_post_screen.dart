@@ -144,11 +144,22 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       return;
     }
 
+    if (_spotlightBoost) {
+      final paid = await spendCoinsOrOpenWallet(
+        context: context,
+        feature: projectBoostFeature,
+      );
+      if (!mounted || !paid) {
+        return;
+      }
+    }
+
     setState(() => _submitting = true);
     await widget.store.submitPostForReview(
       imagePaths: _imagePaths,
       caption: caption,
       category: _category,
+      boosted: _spotlightBoost,
     );
     if (!mounted) {
       return;
@@ -157,8 +168,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     await showCragNoticeDialog(
       context: context,
       title: 'Post submitted',
-      message:
-          'Your dynamic was submitted successfully. It is now queued for background review and will appear after approval.',
+      message: _spotlightBoost
+          ? 'Your dynamic is queued with a crux spotlight boost and will appear after approval.'
+          : 'Your dynamic was submitted successfully. It is now queued for background review and will appear after approval.',
     );
     if (mounted) {
       Navigator.of(context).pop();
@@ -295,6 +307,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     ),
                 ],
               ),
+              const SizedBox(height: 18),
+              _SpotlightBoostSwitch(
+                active: _spotlightBoost,
+                onTap: () => setState(() => _spotlightBoost = !_spotlightBoost),
+              ),
             ],
           ),
           Positioned(
@@ -364,6 +381,88 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SpotlightBoostSwitch extends StatelessWidget {
+  const _SpotlightBoostSwitch({required this.active, required this.onTap});
+
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF121819).withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: active
+                ? const Color(0xFFD6FF00)
+                : Colors.white.withValues(alpha: 0.12),
+            width: active ? 1.4 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: active ? const Color(0xFFD6FF00) : Colors.transparent,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFD6FF00)),
+              ),
+              child: Icon(
+                active ? Icons.bolt_rounded : Icons.bolt_outlined,
+                color: active ? Colors.black : const Color(0xFFD6FF00),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Crux Spotlight Boost',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Optional. Spend 120 coins to add a neon boost tag after review.',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.58),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: active,
+              activeThumbColor: Colors.black,
+              activeTrackColor: const Color(0xFFD6FF00),
+              inactiveThumbColor: Colors.white,
+              inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+              onChanged: (_) => onTap(),
+            ),
+          ],
+        ),
       ),
     );
   }

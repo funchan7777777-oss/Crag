@@ -191,7 +191,18 @@ class ClimbyWalletStore extends ChangeNotifier {
         _publishEvent(
           WalletEvent(
             title: 'Purchase failed',
-            message: purchase.error?.message ?? 'The App Store reported an error.',
+            message:
+                purchase.error?.message ?? 'The App Store reported an error.',
+          ),
+        );
+      }
+
+      if (purchase.status == PurchaseStatus.canceled) {
+        _busyProductId = null;
+        _publishEvent(
+          const WalletEvent(
+            title: 'Purchase canceled',
+            message: 'No coins were added because the purchase was canceled.',
           ),
         );
       }

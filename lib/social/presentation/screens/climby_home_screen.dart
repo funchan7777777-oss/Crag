@@ -2575,9 +2575,7 @@ class _CruxRadarScreenState extends State<CruxRadarScreen> {
             builder: (context, _) {
               return Row(
                 children: [
-                  Expanded(
-                    child: _RadarBalanceChip(balance: _wallet.balance),
-                  ),
+                  Expanded(child: _RadarBalanceChip(balance: _wallet.balance)),
                   const SizedBox(width: 10),
                   Expanded(
                     child: GestureDetector(
@@ -3409,21 +3407,32 @@ Future<void> _openProfile(
 
 String _radarRead({required String style, required String grade}) {
   final bodyCue = switch (style) {
-    'Slab' => 'Stand taller than feels natural and let the outside edge settle before your hand moves.',
-    'Lead' => 'Build the clip stance first: hips in, elbow soft, then breathe before reaching for rope.',
-    'Dyno' => 'Load through both feet for one quiet beat; jump from hips, not from bent arms.',
-    _ => 'Pull with toes before hands. Keep hips close, then release the next hand late.',
+    'Slab' =>
+      'Stand taller than feels natural and let the outside edge settle before your hand moves.',
+    'Lead' =>
+      'Build the clip stance first: hips in, elbow soft, then breathe before reaching for rope.',
+    'Dyno' =>
+      'Load through both feet for one quiet beat; jump from hips, not from bent arms.',
+    _ =>
+      'Pull with toes before hands. Keep hips close, then release the next hand late.',
   };
   final riskCue = switch (grade) {
-    'V6-V7' || '5.12' => 'Limit burns to three high-quality attempts; fatigue will hide the real beta.',
-    'V2-V3' || '5.10' => 'Do not rush the easy section. Most falls here come from casual feet.',
-    _ => 'Rest long enough that your first move feels crisp, not just possible.',
+    'V6-V7' || '5.12' =>
+      'Limit burns to three high-quality attempts; fatigue will hide the real beta.',
+    'V2-V3' || '5.10' =>
+      'Do not rush the easy section. Most falls here come from casual feet.',
+    _ =>
+      'Rest long enough that your first move feels crisp, not just possible.',
   };
   final sendPlan = switch (style) {
-    'Slab' => 'Plan: rehearse feet from the ground, climb once silently, then commit to one no-adjustment go.',
-    'Lead' => 'Plan: mark clipping holds, preview rests, and call the crux clip before leaving the ground.',
-    'Dyno' => 'Plan: test distance, test launch feet, then make three identical jumps.',
-    _ => 'Plan: split the roof into entry tension, crux reach, and exit reset. Win one section at a time.',
+    'Slab' =>
+      'Plan: rehearse feet from the ground, climb once silently, then commit to one no-adjustment go.',
+    'Lead' =>
+      'Plan: mark clipping holds, preview rests, and call the crux clip before leaving the ground.',
+    'Dyno' =>
+      'Plan: test distance, test launch feet, then make three identical jumps.',
+    _ =>
+      'Plan: split the roof into entry tension, crux reach, and exit reset. Win one section at a time.',
   };
   return 'Crux Radar $grade / $style\n\nBody cue: $bodyCue\n\nRisk cue: $riskCue\n\nSend plan: $sendPlan';
 }

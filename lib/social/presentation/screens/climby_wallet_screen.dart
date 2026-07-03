@@ -187,10 +187,7 @@ class _WalletTopBar extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: IconButton(
                 onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(
-                  Icons.arrow_back_rounded,
-                  color: Colors.white,
-                ),
+                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
               ),
             ),
             const Text(

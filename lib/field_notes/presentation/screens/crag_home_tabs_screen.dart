@@ -165,9 +165,9 @@ class _WelcomeCoinDialogState extends State<_WelcomeCoinDialog>
                         height: 118,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: const Color(0xFFD6FF00).withValues(
-                            alpha: 0.14,
-                          ),
+                          color: const Color(
+                            0xFFD6FF00,
+                          ).withValues(alpha: 0.14),
                           border: Border.all(
                             color: const Color(0xFFD6FF00),
                             width: 1.2,
