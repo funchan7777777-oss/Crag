@@ -47,15 +47,15 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
       await showCragNoticeDialog(
         context: context,
         title: 'Email needed',
-        message: 'Please enter a valid email before starting.',
+        message: 'Add a valid email before you clip into Crag.',
       );
       return;
     }
     if (password.trim().length < 6) {
       await showCragNoticeDialog(
         context: context,
-        title: 'Password needed',
-        message: 'Please enter at least 6 characters for the password.',
+        title: 'Rope code needed',
+        message: 'Use at least 6 characters for this local rope code.',
       );
       return;
     }
@@ -66,7 +66,7 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
       await showCragNoticeDialog(
         context: context,
         title: 'Grip check failed',
-        message: 'The saved local password for this email does not match.',
+        message: 'That rope code does not match the saved local account.',
       );
       return;
     }
@@ -114,8 +114,7 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
     showCragNoticeDialog(
       context: context,
       title: 'Agreement needed',
-      message:
-          'Please agree to the Terms of Service and Privacy Policy before continuing.',
+      message: 'Review the route rules and privacy notes before entering Crag.',
     );
     return false;
   }
@@ -141,7 +140,7 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
       body: Stack(
         children: [
           CragImageBackdrop(
-            assetPath: 'assets/images/Vibe.png',
+            assetPath: 'assets/images/backdrop_night_wall.png',
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 112, 24, 34),
               child: Column(
@@ -174,7 +173,7 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
                   ),
                   const SizedBox(height: 22),
                   AccessTextField(
-                    label: 'Password',
+                    label: 'Rope code',
                     controller: _passwordController,
                     obscureText: _hidePassword,
                     trailing: IconButton(
@@ -190,7 +189,7 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
                     ),
                   ),
                   const SizedBox(height: 34),
-                  NeonHoldButton(label: 'Login', onPressed: _start),
+                  NeonHoldButton(label: 'Clip In', onPressed: _start),
                   const SizedBox(height: 22),
                   Center(
                     child: GestureDetector(
@@ -204,9 +203,9 @@ class _RopeAccountEntryScreenState extends State<RopeAccountEntryScreen> {
                             letterSpacing: 0,
                           ),
                           children: const [
-                            TextSpan(text: "Don't have an account? "),
+                            TextSpan(text: 'New to this wall? '),
                             TextSpan(
-                              text: 'Sign up',
+                              text: 'Set route card',
                               style: TextStyle(
                                 color: Color(0xFFD6FF00),
                                 fontWeight: FontWeight.w800,

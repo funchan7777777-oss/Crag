@@ -54,8 +54,8 @@ class ClimbyWalletStore extends ChangeNotifier {
         _busyProductId = null;
         _publishEvent(
           const WalletEvent(
-            title: 'Purchase paused',
-            message: 'The App Store purchase did not finish. Try again later.',
+            title: 'Checkout paused',
+            message: 'The App Store sheet did not finish. Try again later.',
           ),
         );
       },
@@ -75,8 +75,8 @@ class ClimbyWalletStore extends ChangeNotifier {
     await _writeBalance();
     _publishEvent(
       const WalletEvent(
-        title: 'First rope loaded',
-        message: '+1200 coins dropped into your chalk bag.',
+        title: 'First ascent stash',
+        message: '+1200 coins loaded into your chalk bag.',
       ),
     );
     return welcomeCoins;
@@ -97,7 +97,7 @@ class ClimbyWalletStore extends ChangeNotifier {
       WalletEvent(
         title: 'Coins clipped',
         message:
-            '${feature.cost} coins used for ${feature.title}. Balance: $_balance.',
+            '${feature.cost} coins burned on ${feature.title}. Chalk bag: $_balance.',
       ),
     );
     return WalletSpendResult.success;
@@ -127,7 +127,7 @@ class ClimbyWalletStore extends ChangeNotifier {
       _publishEvent(
         const WalletEvent(
           title: 'Hold the rope',
-          message: 'A purchase is already being prepared.',
+          message: 'One App Store checkout is already on the rope.',
         ),
       );
       return;
@@ -141,7 +141,7 @@ class ClimbyWalletStore extends ChangeNotifier {
       _publishEvent(
         const WalletEvent(
           title: 'Store unavailable',
-          message: 'The App Store purchase route is not available right now.',
+          message: 'The App Store checkout route is not available right now.',
         ),
       );
       return;
@@ -152,9 +152,8 @@ class ClimbyWalletStore extends ChangeNotifier {
       _busyProductId = null;
       _publishEvent(
         WalletEvent(
-          title: 'Package not found',
-          message:
-              'Apple did not return ${package.productId}. Check App Store Connect.',
+          title: 'Pack unavailable',
+          message: 'This coin pack is not available from the App Store yet.',
         ),
       );
       return;
@@ -167,7 +166,7 @@ class ClimbyWalletStore extends ChangeNotifier {
       _busyProductId = null;
       _publishEvent(
         const WalletEvent(
-          title: 'Purchase not started',
+          title: 'Checkout not started',
           message: 'The App Store purchase sheet could not be opened.',
         ),
       );
@@ -192,7 +191,8 @@ class ClimbyWalletStore extends ChangeNotifier {
           WalletEvent(
             title: 'Purchase failed',
             message:
-                purchase.error?.message ?? 'The App Store reported an error.',
+                purchase.error?.message ??
+                'The App Store checkout reported an error.',
           ),
         );
       }
@@ -224,8 +224,8 @@ class ClimbyWalletStore extends ChangeNotifier {
       _busyProductId = null;
       _publishEvent(
         WalletEvent(
-          title: 'Unknown package',
-          message: 'The App Store returned ${purchase.productID}.',
+          title: 'Pack not matched',
+          message: 'This App Store pack could not be matched to a coin refill.',
         ),
       );
       return;
@@ -251,7 +251,7 @@ class ClimbyWalletStore extends ChangeNotifier {
     _publishEvent(
       WalletEvent(
         title: 'Coins secured',
-        message: '+${package.coins} coins added. Balance: $_balance.',
+        message: '+${package.coins} coins clipped in. Chalk bag: $_balance.',
       ),
     );
   }

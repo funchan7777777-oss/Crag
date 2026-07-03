@@ -77,7 +77,7 @@ class _BootCragLoaderScreenState extends State<BootCragLoaderScreen>
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: Image.asset('assets/images/Grip.png'),
+                  child: Image.asset('assets/images/brand_grip_mark.png'),
                 ),
               ),
             ),

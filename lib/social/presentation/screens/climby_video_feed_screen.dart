@@ -196,7 +196,7 @@ class _ClimbyVideoFeedScreenState extends State<ClimbyVideoFeedScreen> {
                 child: Row(
                   children: [
                     Image.asset(
-                      'assets/images/Campus.png',
+                      'assets/images/feature_training_icon.png',
                       width: 98,
                       height: 33,
                       fit: BoxFit.contain,
@@ -209,7 +209,7 @@ class _ClimbyVideoFeedScreenState extends State<ClimbyVideoFeedScreen> {
                         ),
                       ),
                       child: Image.asset(
-                        'assets/images/Onsight.png',
+                        'assets/images/video_comment_marker.png',
                         width: 40,
                         height: 40,
                         fit: BoxFit.contain,
@@ -437,7 +437,7 @@ class _VideoFeedPageState extends State<_VideoFeedPage> {
               opacity: widget.showBurst ? 1 : 0,
               duration: const Duration(milliseconds: 180),
               child: Image.asset(
-                'assets/images/Hangboard.png',
+                'assets/images/moderation_flag_filled.png',
                 width: 128,
                 height: 128,
                 fit: BoxFit.contain,
@@ -515,8 +515,8 @@ class _VideoFeedPageState extends State<_VideoFeedPage> {
             children: [
               _VideoSideButton(
                 asset: widget.liked
-                    ? 'assets/images/Hangboard.png'
-                    : 'assets/images/Edge.png',
+                    ? 'assets/images/moderation_flag_filled.png'
+                    : 'assets/images/moderation_flag_outline.png',
                 label: likeCount.toString(),
                 onTap: widget.onToggleLike,
               ),
@@ -685,7 +685,7 @@ class _VideoEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: Image(
-        image: AssetImage('assets/images/Ascent.png'),
+        image: AssetImage('assets/images/empty_state_ascent.png'),
         width: 118,
         height: 156,
         fit: BoxFit.contain,
@@ -931,7 +931,9 @@ class _VideoCommentsSheet extends StatelessWidget {
                             children: const [
                               Center(
                                 child: Image(
-                                  image: AssetImage('assets/images/Ascent.png'),
+                                  image: AssetImage(
+                                    'assets/images/empty_state_ascent.png',
+                                  ),
                                   width: 118,
                                   height: 156,
                                   fit: BoxFit.contain,
@@ -1075,7 +1077,7 @@ class _VideoReplyBar extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Please enter...',
+                'Leave clean beta...',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.42),
                   fontWeight: FontWeight.w800,
@@ -1084,7 +1086,7 @@ class _VideoReplyBar extends StatelessWidget {
               ),
             ),
             Image.asset(
-              'assets/images/Knot.png',
+              'assets/images/comment_thread_icon.png',
               width: 28,
               height: 28,
               fit: BoxFit.contain,
@@ -1267,8 +1269,8 @@ class _ClimbyVideoWatchScreenState extends State<ClimbyVideoWatchScreen> {
                           children: [
                             Image.asset(
                               _liked
-                                  ? 'assets/images/Hangboard.png'
-                                  : 'assets/images/Edge.png',
+                                  ? 'assets/images/moderation_flag_filled.png'
+                                  : 'assets/images/moderation_flag_outline.png',
                               width: 32,
                               height: 32,
                               fit: BoxFit.contain,
@@ -1388,8 +1390,8 @@ const climbyVideoClips = [
   ClimbyVideoClip(
     id: 'v01',
     userId: 'alex',
-    videoAsset: 'assets/videos/slab_rope_sequence.mp4',
-    coverAsset: 'assets/images/video_covers/slab_rope_sequence.jpg',
+    videoAsset: 'assets/videos/clip_slab_rope_sequence.mp4',
+    coverAsset: 'assets/images/video_covers/cover_slab_rope_sequence.jpg',
     title: 'Smooth Slab Climb Technique',
     duration: '00:29',
     likeCount: 38,
@@ -1397,8 +1399,8 @@ const climbyVideoClips = [
   ClimbyVideoClip(
     id: 'v02',
     userId: 'maya',
-    videoAsset: 'assets/videos/indoor_roof_project.mp4',
-    coverAsset: 'assets/images/video_covers/indoor_roof_project.jpg',
+    videoAsset: 'assets/videos/clip_indoor_roof_project.mp4',
+    coverAsset: 'assets/images/video_covers/cover_indoor_roof_project.jpg',
     title: 'Roof project finally linked',
     duration: '00:27',
     likeCount: 57,
@@ -1406,8 +1408,8 @@ const climbyVideoClips = [
   ClimbyVideoClip(
     id: 'v03',
     userId: 'noah',
-    videoAsset: 'assets/videos/campus_board_drill.mp4',
-    coverAsset: 'assets/images/video_covers/campus_board_drill.jpg',
+    videoAsset: 'assets/videos/clip_campus_board_drill.mp4',
+    coverAsset: 'assets/images/video_covers/cover_campus_board_drill.jpg',
     title: 'Campus board contact drill',
     duration: '00:36',
     likeCount: 44,
@@ -1415,8 +1417,8 @@ const climbyVideoClips = [
   ClimbyVideoClip(
     id: 'v04',
     userId: 'lina',
-    videoAsset: 'assets/videos/lead_wall_warmup.mp4',
-    coverAsset: 'assets/images/video_covers/lead_wall_warmup.jpg',
+    videoAsset: 'assets/videos/clip_lead_wall_warmup.mp4',
+    coverAsset: 'assets/images/video_covers/cover_lead_wall_warmup.jpg',
     title: 'Lead wall warmup sequence',
     duration: '00:42',
     likeCount: 49,
@@ -1424,8 +1426,8 @@ const climbyVideoClips = [
   ClimbyVideoClip(
     id: 'v05',
     userId: 'sophia',
-    videoAsset: 'assets/videos/boulder_volume_comp.mp4',
-    coverAsset: 'assets/images/video_covers/boulder_volume_comp.jpg',
+    videoAsset: 'assets/videos/clip_boulder_volume_comp.mp4',
+    coverAsset: 'assets/images/video_covers/cover_boulder_volume_comp.jpg',
     title: 'Volume coordination run',
     duration: '00:09',
     likeCount: 63,
@@ -1433,8 +1435,8 @@ const climbyVideoClips = [
   ClimbyVideoClip(
     id: 'v06',
     userId: 'eli',
-    videoAsset: 'assets/videos/outdoor_crux_beta.mp4',
-    coverAsset: 'assets/images/video_covers/outdoor_crux_beta.jpg',
+    videoAsset: 'assets/videos/clip_outdoor_crux_beta.mp4',
+    coverAsset: 'assets/images/video_covers/cover_outdoor_crux_beta.jpg',
     title: 'Outdoor crux beta changed everything',
     duration: '00:06',
     likeCount: 41,
@@ -1442,8 +1444,8 @@ const climbyVideoClips = [
   ClimbyVideoClip(
     id: 'v07',
     userId: 'zoe',
-    videoAsset: 'assets/videos/slab_balance_move.mp4',
-    coverAsset: 'assets/images/video_covers/slab_balance_move.jpg',
+    videoAsset: 'assets/videos/clip_slab_balance_move.mp4',
+    coverAsset: 'assets/images/video_covers/cover_slab_balance_move.jpg',
     title: 'Slab balance without panic',
     duration: '00:13',
     likeCount: 52,
@@ -1451,8 +1453,8 @@ const climbyVideoClips = [
   ClimbyVideoClip(
     id: 'v08',
     userId: 'kai',
-    videoAsset: 'assets/videos/dyno_coordination_run.mp4',
-    coverAsset: 'assets/images/video_covers/dyno_coordination_run.jpg',
+    videoAsset: 'assets/videos/clip_dyno_coordination_run.mp4',
+    coverAsset: 'assets/images/video_covers/cover_dyno_coordination_run.jpg',
     title: 'Dyno timing in two tries',
     duration: '00:13',
     likeCount: 46,
@@ -1460,8 +1462,8 @@ const climbyVideoClips = [
   ClimbyVideoClip(
     id: 'v09',
     userId: 'rhea',
-    videoAsset: 'assets/videos/overhang_power_link.mp4',
-    coverAsset: 'assets/images/video_covers/overhang_power_link.jpg',
+    videoAsset: 'assets/videos/clip_overhang_power_link.mp4',
+    coverAsset: 'assets/images/video_covers/cover_overhang_power_link.jpg',
     title: 'Overhang power link and shakeout',
     duration: '00:13',
     likeCount: 59,

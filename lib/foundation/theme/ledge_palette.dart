@@ -15,6 +15,14 @@ class LedgePalette {
   static const cleanPanel = Color(0xFFFFFFFF);
 }
 
+class CragFonts {
+  const CragFonts._();
+
+  static const sans = 'ClimbySans';
+  static const display = 'ClimbyDisplay';
+  static const digits = 'ClimbyDigits';
+}
+
 ThemeData buildCragTheme() {
   final scheme =
       ColorScheme.fromSeed(
@@ -30,31 +38,37 @@ ThemeData buildCragTheme() {
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
+    fontFamily: CragFonts.sans,
     scaffoldBackgroundColor: LedgePalette.chalkWhite,
     textTheme: const TextTheme(
       headlineLarge: TextStyle(
+        fontFamily: CragFonts.display,
         fontSize: 34,
         fontWeight: FontWeight.w800,
         letterSpacing: 0,
         height: 1.04,
       ),
       titleLarge: TextStyle(
+        fontFamily: CragFonts.display,
         fontSize: 20,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         letterSpacing: 0,
       ),
       titleMedium: TextStyle(
+        fontFamily: CragFonts.sans,
         fontSize: 16,
         fontWeight: FontWeight.w700,
         letterSpacing: 0,
       ),
       bodyMedium: TextStyle(
+        fontFamily: CragFonts.sans,
         fontSize: 14,
         fontWeight: FontWeight.w500,
         letterSpacing: 0,
         height: 1.38,
       ),
       labelMedium: TextStyle(
+        fontFamily: CragFonts.sans,
         fontSize: 12,
         fontWeight: FontWeight.w700,
         letterSpacing: 0,

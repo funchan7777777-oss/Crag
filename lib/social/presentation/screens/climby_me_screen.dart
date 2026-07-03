@@ -13,6 +13,7 @@ import '../../../access_trail/presentation/screens/route_cards_onboarding_screen
 import '../../../access_trail/presentation/widgets/access_text_field.dart';
 import '../../../access_trail/presentation/widgets/crag_notice_dialog.dart';
 import '../../../access_trail/presentation/widgets/neon_hold_button.dart';
+import '../../../foundation/safety/community_content_safety.dart';
 import '../../data/climby_social_store.dart';
 import 'climby_home_screen.dart';
 import 'climby_wallet_screen.dart';
@@ -77,7 +78,10 @@ class _ClimbyMeScreenState extends State<ClimbyMeScreen> {
           return Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset('assets/images/Invite.png', fit: BoxFit.fill),
+              Image.asset(
+                'assets/images/friend_invite_backdrop.png',
+                fit: BoxFit.fill,
+              ),
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -176,7 +180,7 @@ class _ClimbyMeScreenState extends State<ClimbyMeScreen> {
                     ),
                     child: Center(
                       child: Image.asset(
-                        'assets/images/Rack.png',
+                        'assets/images/wallet_rack_banner.png',
                         width: 358,
                         height: 74,
                         fit: BoxFit.fill,
@@ -355,7 +359,7 @@ class _EditMyProfileScreenState extends State<EditMyProfileScreen> {
           context: context,
           title: 'Photo not opened',
           message:
-              'Please allow camera or photo access, then choose your avatar again.',
+              'Camera or library access is needed to reset your climber photo.',
         );
       }
     }
@@ -454,7 +458,49 @@ class _EditMyProfileScreenState extends State<EditMyProfileScreen> {
       await showCragNoticeDialog(
         context: context,
         title: 'Nickname needed',
-        message: 'Please enter a nickname before continuing.',
+        message: 'Add the name that appears beside your route notes.',
+      );
+      return;
+    }
+    final nameSafety = CommunityContentSafety.validate(
+      text: name,
+      surface: CommunityContentSurface.profile,
+      maxLength: 32,
+    );
+    if (!nameSafety.allowed) {
+      await showCragNoticeDialog(
+        context: context,
+        title: 'Tune this name',
+        message: nameSafety.message ?? 'Tune your climber name before saving.',
+      );
+      return;
+    }
+    final citySafety = CommunityContentSafety.validate(
+      text: _cityController.text.trim(),
+      surface: CommunityContentSurface.profile,
+      maxLength: 48,
+    );
+    if (!citySafety.allowed) {
+      await showCragNoticeDialog(
+        context: context,
+        title: 'Tune this city',
+        message: citySafety.message ?? 'Tune your crag base before saving.',
+      );
+      return;
+    }
+    final bioText = _bioController.text.trim().isEmpty
+        ? 'Logging quiet feet, clean beta, and better belays.'
+        : _bioController.text.trim();
+    final bioSafety = CommunityContentSafety.validate(
+      text: bioText,
+      surface: CommunityContentSurface.profile,
+      maxLength: 160,
+    );
+    if (!bioSafety.allowed) {
+      await showCragNoticeDialog(
+        context: context,
+        title: 'Tune this note',
+        message: bioSafety.message ?? 'Tune your field note before saving.',
       );
       return;
     }
@@ -462,9 +508,7 @@ class _EditMyProfileScreenState extends State<EditMyProfileScreen> {
     await widget.cache.anchorActiveCard(
       widget.card.copyWith(
         trailName: name,
-        fieldBio: _bioController.text.trim().isEmpty
-            ? 'Building a steady climbing log.'
-            : _bioController.text.trim(),
+        fieldBio: bioText,
         avatarFilePath: _avatarFilePath,
         genderLabel: _genderController.text.trim(),
         birthDate: _birthController.text.trim(),
@@ -489,7 +533,10 @@ class _EditMyProfileScreenState extends State<EditMyProfileScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
+          Image.asset(
+            'assets/images/backdrop_night_wall.png',
+            fit: BoxFit.fill,
+          ),
           DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.16),
@@ -616,7 +663,10 @@ class SettingScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
+          Image.asset(
+            'assets/images/backdrop_night_wall.png',
+            fit: BoxFit.fill,
+          ),
           DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.12),
@@ -626,7 +676,7 @@ class SettingScreen extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(16, topInset + 78, 16, 28),
             children: [
               _SettingRow(
-                label: 'Blacklist',
+                label: 'Blocked Climbers',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => BlacklistScreen(store: store),
@@ -634,7 +684,7 @@ class SettingScreen extends StatelessWidget {
                 ),
               ),
               _SettingRow(
-                label: 'Privacy agreement',
+                label: 'Privacy Policy',
                 onTap: () => _openPolicy(
                   context,
                   AccessCopyLedger.privacyUrl,
@@ -642,7 +692,7 @@ class SettingScreen extends StatelessWidget {
                 ),
               ),
               _SettingRow(
-                label: 'User agreement',
+                label: 'Terms of Service',
                 onTap: () => _openPolicy(
                   context,
                   AccessCopyLedger.termsUrl,
@@ -657,15 +707,28 @@ class SettingScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              _SettingRow(label: 'Log out', onTap: () => _logout(context)),
               _SettingRow(
-                label: 'Deletion of account',
+                label: 'Safety Contact',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const CommunityGuidelinesScreen(
+                      focusSafetyContact: true,
+                    ),
+                  ),
+                ),
+              ),
+              _SettingRow(
+                label: 'Leave This Rope',
+                onTap: () => _logout(context),
+              ),
+              _SettingRow(
+                label: 'Delete Local Route Card',
                 danger: true,
                 onTap: () => _deleteAccount(context),
               ),
             ],
           ),
-          _SimpleTopBar(title: 'Setting', topInset: topInset),
+          _SimpleTopBar(title: 'Settings', topInset: topInset),
         ],
       ),
     );
@@ -680,15 +743,15 @@ class SettingScreen extends StatelessWidget {
   }
 
   Future<void> _logout(BuildContext context) async {
-    await _showSettingLoading(context, 'Logging out');
+    await _showSettingLoading(context, 'Leaving rope');
     await cache.clearActiveCard();
     if (!context.mounted) {
       return;
     }
     await showCragNoticeDialog(
       context: context,
-      title: 'Logged out',
-      message: 'You have safely left this account.',
+      title: 'Rope unclipped',
+      message: 'This local session is closed.',
     );
     if (!context.mounted) {
       return;
@@ -702,16 +765,16 @@ class SettingScreen extends StatelessWidget {
   }
 
   Future<void> _deleteAccount(BuildContext context) async {
-    await _showSettingLoading(context, 'Deleting account');
+    await _showSettingLoading(context, 'Deleting route card');
     await cache.resetAfterAccountDeletion();
     if (!context.mounted) {
       return;
     }
     await showCragNoticeDialog(
       context: context,
-      title: 'Account deleted',
+      title: 'Route card deleted',
       message:
-          'Your local account data has been removed. You will return to the welcome guide.',
+          'Your local profile, route notes, and session data have been removed.',
     );
     if (!context.mounted) {
       return;
@@ -739,13 +802,16 @@ class BlacklistScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
+          Image.asset(
+            'assets/images/backdrop_night_wall.png',
+            fit: BoxFit.fill,
+          ),
           AnimatedBuilder(
             animation: store,
             builder: (context, _) {
               final users = store.blockedUsers;
               if (users.isEmpty) {
-                return const _ProfileEmptyState(message: 'No blocked users');
+                return const _ProfileEmptyState(message: '');
               }
               return ListView.separated(
                 padding: EdgeInsets.fromLTRB(16, topInset + 78, 16, 24),
@@ -771,7 +837,7 @@ class BlacklistScreen extends StatelessWidget {
                       GestureDetector(
                         onTap: () => store.unblockUser(user.id),
                         child: Image.asset(
-                          'assets/images/Crux.png',
+                          'assets/images/relation_crux_badge.png',
                           width: 92,
                           height: 42,
                           fit: BoxFit.fill,
@@ -783,7 +849,7 @@ class BlacklistScreen extends StatelessWidget {
               );
             },
           ),
-          _SimpleTopBar(title: 'Blacklist', topInset: topInset),
+          _SimpleTopBar(title: 'Blocked Climbers', topInset: topInset),
         ],
       ),
     );
@@ -813,7 +879,10 @@ class _ProfileUserListScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
+          Image.asset(
+            'assets/images/backdrop_night_wall.png',
+            fit: BoxFit.fill,
+          ),
           AnimatedBuilder(
             animation: store,
             builder: (context, _) {
@@ -822,7 +891,7 @@ class _ProfileUserListScreen extends StatelessWidget {
                 _ProfileUserListKind.follower => store.followerUsers,
               };
               if (users.isEmpty) {
-                return const _ProfileEmptyState(message: 'No data');
+                return const _ProfileEmptyState(message: '');
               }
               return ListView.separated(
                 padding: EdgeInsets.fromLTRB(16, topInset + 78, 16, 24),
@@ -987,14 +1056,22 @@ class MyPostsScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
+          Image.asset(
+            'assets/images/backdrop_night_wall.png',
+            fit: BoxFit.fill,
+          ),
           AnimatedBuilder(
             animation: store,
             builder: (context, _) {
               final posts = store.pendingPosts;
               if (posts.isEmpty) {
-                return const _ProfileEmptyState(
-                  message: 'No submitted posts yet',
+                return Center(
+                  child: Image.asset(
+                    'assets/images/empty_state_ascent.png',
+                    width: 128,
+                    height: 166,
+                    fit: BoxFit.contain,
+                  ),
                 );
               }
               return GridView.builder(
@@ -1188,32 +1265,40 @@ class _SelectionTile extends StatelessWidget {
 }
 
 class CommunityGuidelinesScreen extends StatelessWidget {
-  const CommunityGuidelinesScreen({super.key});
+  const CommunityGuidelinesScreen({this.focusSafetyContact = false, super.key});
+
+  final bool focusSafetyContact;
 
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
+    const safetyContactRule = (
+      'Safety Contact',
+      'For urgent moderation support, contact ${AccessCopyLedger.safetyContactEmail}. Include the climber name, content type, and a short route note.',
+    );
     final rules = [
+      if (focusSafetyContact) safetyContactRule,
       (
-        'Real identity and consent',
-        'Do not impersonate others, create anonymous harassment, or pressure another climber to chat. Direct messages and calls are only available when both climbers follow each other.',
+        'Real climbers and clear consent',
+        'Do not impersonate another climber or pressure someone into chat. Direct messages and calls open only after both climbers follow each other.',
       ),
       (
-        'Respectful climbing community',
-        'Harassment, bullying, hate speech, threats, sexual content, scams, and spam are not allowed. Use report or block when content or behavior feels unsafe.',
+        'Respect the wall',
+        'Targeted abuse, explicit adult material, scams, spam, unsafe pressure, and discriminatory attacks are off-route. Use report or block when a line feels wrong.',
       ),
       (
-        'Post review and safety',
-        'New posts may be reviewed before public display. Do not share dangerous instructions, trespass beta, private locations, or content that encourages unsafe climbing.',
+        'Reviewed send logs',
+        'New posts may be reviewed before public display. Do not share trespass beta, private locations, or instructions that encourage unsafe climbing.',
       ),
       (
-        'Privacy and minors',
-        'Do not publish private contact details, exact home locations, or images of others without permission. Extra care is required around minors and gym spaces.',
+        'Privacy at the crag',
+        'Do not publish private contact details, exact home locations, or photos of others without permission. Take extra care in gyms and youth spaces.',
       ),
       (
-        'Moderation actions',
-        'Reported content can be hidden locally and may be restricted. Blocking a user hides their posts and chats from your experience.',
+        'Moderation route',
+        'Reported content is hidden locally and may be restricted. Blocking a climber removes their posts, comments, and chat notes from your wall.',
       ),
+      if (!focusSafetyContact) safetyContactRule,
     ];
 
     return Scaffold(
@@ -1221,7 +1306,10 @@ class CommunityGuidelinesScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
+          Image.asset(
+            'assets/images/backdrop_night_wall.png',
+            fit: BoxFit.fill,
+          ),
           ListView.separated(
             padding: EdgeInsets.fromLTRB(18, topInset + 80, 18, 26),
             itemCount: rules.length,
@@ -1326,35 +1414,65 @@ class _MePills extends StatelessWidget {
       spacing: 7,
       runSpacing: 7,
       children: [
-        _SmallOrangePill(text: '${_genderSymbol(card)} ${_age(card)}'),
-        _SmallOrangePill(text: card.city ?? 'Los Angeles, CA'),
-        const _SmallOrangePill(text: 'Bouldering'),
+        _MeGearTag(
+          icon: Icons.person_rounded,
+          text: '${_genderSymbol(card)} ${_age(card)}',
+        ),
+        _MeGearTag(
+          icon: Icons.place_rounded,
+          text: card.city ?? 'Los Angeles, CA',
+        ),
+        const _MeGearTag(icon: Icons.terrain_rounded, text: 'Bouldering'),
       ],
     );
   }
 }
 
-class _SmallOrangePill extends StatelessWidget {
-  const _SmallOrangePill({required this.text});
+class _MeGearTag extends StatelessWidget {
+  const _MeGearTag({required this.icon, required this.text});
 
+  final IconData icon;
   final String text;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      constraints: const BoxConstraints(maxWidth: 176),
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFF661F),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0,
+        color: const Color(0xFF121819).withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFFD6FF00).withValues(alpha: 0.42),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: const Color(0xFFD6FF00), size: 14),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1447,22 +1565,15 @@ class _PendingPostStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (posts.isEmpty) {
-      return Container(
+      return SizedBox(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.28),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        child: Text(
-          'No submitted posts yet. New posts appear here while review is pending.',
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.72),
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            height: 1.35,
-            letterSpacing: 0,
+        height: 172,
+        child: Center(
+          child: Image.asset(
+            'assets/images/empty_state_ascent.png',
+            width: 128,
+            height: 166,
+            fit: BoxFit.contain,
           ),
         ),
       );
@@ -1480,7 +1591,7 @@ class _PendingPostStrip extends StatelessWidget {
               context: context,
               title: 'Under review',
               message:
-                  'This post has been submitted successfully and will become public only after review approval.',
+                  'This send is clipped to the review rope and will appear after approval.',
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(9),
@@ -1506,7 +1617,7 @@ class _PendingPostCard extends StatelessWidget {
         context: context,
         title: 'Under review',
         message:
-            'This post has been submitted successfully and will become public only after review approval.',
+            'This send is clipped to the review rope and will appear after approval.',
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
@@ -1719,21 +1830,23 @@ class _ProfileEmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset(
-            'assets/images/Ascent.png',
+            'assets/images/empty_state_ascent.png',
             width: 116,
             height: 150,
             fit: BoxFit.contain,
           ),
-          const SizedBox(height: 10),
-          Text(
-            message,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.72),
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0,
+          if (message.trim().isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              message,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.72),
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -1792,8 +1905,8 @@ ClimberAccessCard _defaultCard() {
   return ClimberAccessCard(
     corridorKey: 'local:me',
     accessRoute: 'local',
-    trailName: 'Alex R.',
-    fieldBio: 'Finally sent my project! Finally sent my project!',
+    trailName: 'Halou',
+    fieldBio: 'Logging quiet feet, clean beta, and better belays.',
     anchoredAtIso: DateTime.now().toIso8601String(),
     contactEmail: null,
     genderLabel: 'Male',
@@ -1804,12 +1917,14 @@ ClimberAccessCard _defaultCard() {
 
 String _displayName(ClimberAccessCard card) {
   final name = card.trailName.trim();
-  return name.isEmpty ? 'Alex R.' : name;
+  return name.isEmpty ? 'Halou' : name;
 }
 
 String _bio(ClimberAccessCard card) {
   final bio = card.fieldBio.trim();
-  return bio.isEmpty ? 'Building a steady climbing log.' : bio;
+  return bio.isEmpty
+      ? 'Logging quiet feet, clean beta, and better belays.'
+      : bio;
 }
 
 String _genderSymbol(ClimberAccessCard card) {
@@ -1841,4 +1956,4 @@ String _birthDateForAge(int age) {
   return '${year.toString().padLeft(4, '0')}-01-01';
 }
 
-const _defaultAvatarAsset = 'assets/images/head/avatar_male_alex.jpg';
+const _defaultAvatarAsset = 'assets/images/avatars/member_alex.jpg';

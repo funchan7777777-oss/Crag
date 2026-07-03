@@ -26,13 +26,13 @@ class TrailheadAccessScreen extends StatelessWidget {
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.black,
       body: CragImageBackdrop(
-        assetPath: 'assets/images/Carabiner.png',
+        assetPath: 'assets/images/access_backdrop_carabiner.png',
         child: Padding(
           padding: EdgeInsets.fromLTRB(24, 0, 24, bottomInset + 44),
           child: Align(
             alignment: Alignment.bottomCenter,
             child: NeonHoldButton(
-              label: 'Get Start',
+              label: 'Enter Crag',
               onPressed: () => _openPasswordLogin(context),
             ),
           ),

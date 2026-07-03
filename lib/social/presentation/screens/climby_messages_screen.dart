@@ -181,7 +181,10 @@ class AddFriendScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
+          Image.asset(
+            'assets/images/backdrop_night_wall.png',
+            fit: BoxFit.fill,
+          ),
           DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.18),
@@ -285,7 +288,7 @@ class _AddFriendTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Image.asset(
-        'assets/images/Journal.png',
+        'assets/images/message_journal_card.png',
         width: 72,
         height: 82,
         fit: BoxFit.fill,
@@ -499,7 +502,7 @@ class _SystemMessageRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'System',
+                    'Belay Notice',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -511,7 +514,7 @@ class _SystemMessageRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${user.name} started following you',
+                    '${user.name} added you to their partner list',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -574,7 +577,7 @@ class _FollowActionButton extends StatelessWidget {
             )
           : followLabel == null
           ? Image.asset(
-              'assets/images/Flash.png',
+              'assets/images/message_system_flash.png',
               width: 86,
               height: 34,
               fit: BoxFit.fill,
@@ -611,7 +614,7 @@ class _MessagesEmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset(
-            'assets/images/Ascent.png',
+            'assets/images/empty_state_ascent.png',
             width: 118,
             height: 156,
             fit: BoxFit.contain,

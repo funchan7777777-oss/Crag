@@ -5,6 +5,7 @@ class AccessCopyLedger {
       'https://sites.google.com/view/crag-terms-of-service/home';
   static const privacyUrl =
       'https://sites.google.com/view/crag-privacy-policy/home';
+  static const safetyContactEmail = 'safety@climby.app';
 
   static const emailPattern =
       r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$';

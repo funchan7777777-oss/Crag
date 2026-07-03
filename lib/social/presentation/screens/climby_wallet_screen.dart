@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../access_trail/presentation/widgets/crag_notice_dialog.dart';
+import '../../../foundation/theme/ledge_palette.dart';
 import '../../data/climby_wallet_store.dart';
 
 class MyWalletScreen extends StatefulWidget {
@@ -58,7 +59,10 @@ class _MyWalletScreenState extends State<MyWalletScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
+          Image.asset(
+            'assets/images/backdrop_night_wall.png',
+            fit: BoxFit.fill,
+          ),
           DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.2),
@@ -115,7 +119,7 @@ Future<bool> spendCoinsOrOpenWallet({
       context: context,
       title: 'Coins clipped',
       message:
-          '${feature.cost} coins used for ${feature.title}. Balance: ${wallet.balance}.',
+          '${feature.cost} coins burned on ${feature.title}. Chalk bag: ${wallet.balance}.',
     );
     return true;
   }
@@ -141,7 +145,7 @@ Future<bool> unlockWithCoinsOrOpenWallet({
       context: context,
       title: 'Route unlocked',
       message:
-          '${feature.title} opened for ${feature.cost} coins. Balance: ${wallet.balance}.',
+          '${feature.title} opened for ${feature.cost} coins. Chalk bag: ${wallet.balance}.',
     );
     return true;
   }
@@ -155,9 +159,9 @@ Future<void> _showInsufficientAndOpenWallet(
 ) async {
   await showCragNoticeDialog(
     context: context,
-    title: 'More coins needed',
+    title: 'Chalk bag is light',
     message:
-        '${feature.title} needs ${feature.cost} coins. Recharge your chalk bag to continue.',
+        '${feature.title} needs ${feature.cost} coins. Refill before the next burn.',
   );
   if (!context.mounted) {
     return;
@@ -193,6 +197,7 @@ class _WalletTopBar extends StatelessWidget {
             const Text(
               'My Wallet',
               style: TextStyle(
+                fontFamily: CragFonts.display,
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
@@ -230,7 +235,7 @@ class _WalletBalancePanel extends StatelessWidget {
       child: Row(
         children: [
           Image.asset(
-            'assets/images/Quickdraw.png',
+            'assets/images/coin_quickdraw.png',
             width: 70,
             height: 70,
             fit: BoxFit.contain,
@@ -241,7 +246,7 @@ class _WalletBalancePanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Live coin balance',
+                  'Chalk bag balance',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.68),
                     fontSize: 12,
@@ -255,15 +260,16 @@ class _WalletBalancePanel extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
+                    fontFamily: CragFonts.digits,
                     color: Color(0xFFD6FF00),
                     fontSize: 34,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  'Purchases are fetched from Apple when you tap a package.',
+                  'Tap a pack to open the App Store checkout.',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.56),
                     fontSize: 11,
@@ -291,6 +297,7 @@ class _WalletSectionTitle extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
+        fontFamily: CragFonts.display,
         color: Colors.white,
         fontSize: 15,
         fontWeight: FontWeight.w900,
@@ -329,7 +336,7 @@ class _CoinPackageRow extends StatelessWidget {
         child: Row(
           children: [
             Image.asset(
-              'assets/images/Quickdraw.png',
+              'assets/images/coin_quickdraw.png',
               width: 34,
               height: 34,
               fit: BoxFit.contain,
@@ -345,14 +352,15 @@ class _CoinPackageRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
+                      fontFamily: CragFonts.digits,
                       color: Colors.white,
                       fontSize: 15,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: 0,
                     ),
                   ),
                   Text(
-                    package.productId,
+                    'Chalk-bag refill',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -385,9 +393,10 @@ class _CoinPackageRow extends StatelessWidget {
                         key: ValueKey(package.fallbackPrice),
                         textAlign: TextAlign.right,
                         style: const TextStyle(
+                          fontFamily: CragFonts.digits,
                           color: Color(0xFFD6FF00),
                           fontSize: 15,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                           letterSpacing: 0,
                         ),
                       ),
@@ -428,9 +437,10 @@ class _SpendFeatureRow extends StatelessWidget {
             child: Text(
               feature.cost.toString(),
               style: const TextStyle(
+                fontFamily: CragFonts.digits,
                 color: Colors.black,
                 fontSize: 12,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
                 letterSpacing: 0,
               ),
             ),

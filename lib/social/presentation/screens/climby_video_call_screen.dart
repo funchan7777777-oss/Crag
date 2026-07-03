@@ -194,21 +194,21 @@ class _ClimbyVideoCallScreenState extends State<ClimbyVideoCallScreen> {
                 children: [
                   _CallControlButton(
                     asset: _cameraEnabled
-                        ? 'assets/images/Topout.png'
-                        : 'assets/images/Approach.png',
+                        ? 'assets/images/call_audio_live.png'
+                        : 'assets/images/call_audio_available.png',
                     onTap: () =>
                         setState(() => _cameraEnabled = !_cameraEnabled),
                   ),
                   _CallControlButton(
                     asset: _micEnabled
-                        ? 'assets/images/Buddy.png'
-                        : 'assets/images/Belay.png',
+                        ? 'assets/images/call_video_muted.png'
+                        : 'assets/images/call_audio_muted.png',
                     onTap: () => setState(() => _micEnabled = !_micEnabled),
                   ),
                   _CallControlButton(
                     asset: _speakerEnabled
-                        ? 'assets/images/Roster.png'
-                        : 'assets/images/Meetup.png',
+                        ? 'assets/images/call_roster_muted.png'
+                        : 'assets/images/call_meetup_muted.png',
                     onTap: () =>
                         setState(() => _speakerEnabled = !_speakerEnabled),
                   ),

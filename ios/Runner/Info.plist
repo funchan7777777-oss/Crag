@@ -27,13 +27,13 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Crag uses the camera for profile photos and local video call preview.</string>
+	<string>Use the camera to set your climber photo, capture a route note, or start a video call you choose.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Crag uses the microphone only when you start a video call.</string>
+	<string>Use the microphone only during video calls you start with mutual climbing partners.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Crag uses your photo library only when you choose a profile image.</string>
+	<string>Choose photos from your library for your climber profile or reviewed climbing posts.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Crag may save edited profile images you choose to keep locally.</string>
+	<string>Save profile or climbing images you choose to keep on this device.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

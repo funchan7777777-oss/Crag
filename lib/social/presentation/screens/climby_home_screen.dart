@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
 import '../../../field_notes/presentation/screens/crag_home_tabs_screen.dart';
+import '../../../foundation/safety/community_content_safety.dart';
 import '../../data/climby_social_store.dart';
 import '../../data/climby_wallet_store.dart';
 import 'climby_chat_screen.dart';
@@ -58,7 +60,7 @@ class _ClimbyHomeScreenState extends State<ClimbyHomeScreen> {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/images/Clip.png',
+              'assets/images/home_daily_pick_card.png',
               width: double.infinity,
               height: double.infinity,
               fit: BoxFit.fill,
@@ -85,6 +87,7 @@ class _ClimbyHomeScreenState extends State<ClimbyHomeScreen> {
                     ),
                   ),
                   SliverToBoxAdapter(child: _FeatureDock(store: _store)),
+                  const SliverToBoxAdapter(child: _CruxRadarLaunchCard()),
                   SliverToBoxAdapter(child: _HomeActionGrid(store: _store)),
                   SliverToBoxAdapter(
                     child: _CategoryRail(
@@ -232,7 +235,7 @@ class _HomeHero extends StatelessWidget {
                         right: 0,
                         top: 68,
                         child: Image.asset(
-                          'assets/images/Pocket.png',
+                          'assets/images/home_pocket_badge.png',
                           width: 74,
                           fit: BoxFit.contain,
                         ),
@@ -246,7 +249,7 @@ class _HomeHero extends StatelessWidget {
               left: 16,
               top: 22,
               child: Image.asset(
-                'assets/images/Campus.png',
+                'assets/images/feature_training_icon.png',
                 width: 98,
                 height: 33,
                 fit: BoxFit.contain,
@@ -332,27 +335,22 @@ class _FeatureDock extends StatelessWidget {
     final features = [
       _HomeFeature(
         label: 'Climbing\nSpots',
-        asset: 'assets/images/Dyno.png',
+        asset: 'assets/images/feature_climbing_spots.png',
         onTap: () => _push(context, PopularSpotsScreen(store: store)),
       ),
       _HomeFeature(
-        label: 'Crux\nRadar',
-        asset: 'assets/images/Beacon.png',
-        onTap: () => _push(context, const CruxRadarScreen()),
-      ),
-      _HomeFeature(
         label: 'AI Coach',
-        asset: 'assets/images/Quest.png',
+        asset: 'assets/images/feature_videos_icon.png',
         onTap: () => _push(context, const AiCoachScreen()),
       ),
       _HomeFeature(
         label: 'Videos',
-        asset: 'assets/images/Beta.png',
+        asset: 'assets/images/feature_ai_coach_icon.png',
         onTap: () => CragTabSwitcher.of(context)?.selectTab(1),
       ),
       _HomeFeature(
         label: 'Community',
-        asset: 'assets/images/Nut.png',
+        asset: 'assets/images/feature_community_icon.png',
         onTap: () => _push(
           context,
           TrendingPostsScreen(store: store, title: 'Community'),
@@ -430,6 +428,181 @@ class _HomeFeature extends StatelessWidget {
   }
 }
 
+class _CruxRadarLaunchCard extends StatelessWidget {
+  const _CruxRadarLaunchCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _push(context, const CruxRadarScreen()),
+        child: Container(
+          height: 86,
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF111718).withValues(alpha: 0.96),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: const Color(0xFFD6FF00).withValues(alpha: 0.5),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFD6FF00).withValues(alpha: 0.09),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD6FF00),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                        ),
+                        const SizedBox(width: 9),
+                        const Expanded(
+                          child: Text(
+                            'Crux Radar',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      'Scan body cue + risk cue for 80 coins',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 96,
+                height: 68,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const CustomPaint(
+                      size: Size(82, 62),
+                      painter: _CruxRadarGlyphPainter(),
+                    ),
+                    Positioned(
+                      right: 0,
+                      bottom: 3,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF6A1D),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.white, width: 1.2),
+                        ),
+                        child: const Text(
+                          '80',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CruxRadarGlyphPainter extends CustomPainter {
+  const _CruxRadarGlyphPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width * 0.47, size.height * 0.52);
+    final lime = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = const Color(0xFFD6FF00).withValues(alpha: 0.8);
+    final dim = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..color = Colors.white.withValues(alpha: 0.14);
+    final sweep = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xFFFF6A1D);
+    final hold = Paint()..style = PaintingStyle.fill;
+
+    for (final radius in [14.0, 23.0, 32.0]) {
+      canvas.drawCircle(center, radius, dim);
+    }
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: 32),
+      -math.pi * 0.95,
+      math.pi * 1.18,
+      false,
+      lime,
+    );
+    canvas.drawLine(
+      center,
+      center + Offset(math.cos(-0.62) * 34, math.sin(-0.62) * 34),
+      sweep,
+    );
+
+    final holds = [
+      (Offset(size.width * 0.22, size.height * 0.28), const Color(0xFFD6FF00)),
+      (Offset(size.width * 0.62, size.height * 0.25), const Color(0xFFFF6A1D)),
+      (Offset(size.width * 0.34, size.height * 0.72), Colors.white),
+      (Offset(size.width * 0.72, size.height * 0.62), const Color(0xFFD6FF00)),
+    ];
+    for (final item in holds) {
+      hold.color = item.$2.withValues(alpha: 0.9);
+      canvas.drawCircle(item.$1, 4.2, hold);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CruxRadarGlyphPainter oldDelegate) => false;
+}
+
 class _HomeActionGrid extends StatelessWidget {
   const _HomeActionGrid({required this.store});
 
@@ -449,7 +622,7 @@ class _HomeActionGrid extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.asset(
-                  'assets/images/Flow.png',
+                  'assets/images/partners_map_card.png',
                   width: 173,
                   height: 142,
                   fit: BoxFit.fill,
@@ -463,7 +636,7 @@ class _HomeActionGrid extends StatelessWidget {
             child: Column(
               children: [
                 _ImagePillButton(
-                  asset: 'assets/images/Wall.png',
+                  asset: 'assets/images/home_wall_badge.png',
                   onTap: () => _push(
                     context,
                     TrendingPostsScreen(store: store, title: 'Trending'),
@@ -471,7 +644,7 @@ class _HomeActionGrid extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 _ImagePillButton(
-                  asset: 'assets/images/Valley.png',
+                  asset: 'assets/images/home_valley_card.png',
                   onTap: () => _push(context, PopularSpotsScreen(store: store)),
                 ),
               ],
@@ -538,7 +711,7 @@ class _CategoryRail extends StatelessWidget {
                 ),
                 if (selected)
                   Image.asset(
-                    'assets/images/Helmet.png',
+                    'assets/images/safety_helmet_icon.png',
                     width: 28,
                     height: 5,
                     fit: BoxFit.fill,
@@ -630,8 +803,8 @@ class _PostTileState extends State<_PostTile> {
                 onTap: () => setState(() => _liked = !_liked),
                 child: Image.asset(
                   _liked
-                      ? 'assets/images/Hangboard.png'
-                      : 'assets/images/Edge.png',
+                      ? 'assets/images/moderation_flag_filled.png'
+                      : 'assets/images/moderation_flag_outline.png',
                   width: 24,
                   height: 24,
                   fit: BoxFit.contain,
@@ -664,7 +837,7 @@ class PopularSpotsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return _CliffScreenFrame(
       title: 'Popular Spots',
-      backgroundAsset: 'assets/images/Vibe.png',
+      backgroundAsset: 'assets/images/backdrop_night_wall.png',
       backgroundFit: BoxFit.fill,
       child: AnimatedBuilder(
         animation: store,
@@ -767,11 +940,11 @@ class _SpotCard extends StatelessWidget {
                       ],
                     ),
                     _SpotMetric(
-                      iconAsset: 'assets/images/Traverse.png',
+                      iconAsset: 'assets/images/icon_traverse_thread.png',
                       text: spot.location,
                     ),
                     _SpotMetric(
-                      iconAsset: 'assets/images/Chat.png',
+                      iconAsset: 'assets/images/icon_chat_bubble.png',
                       text: '${spot.climbers} Climbers',
                     ),
                     _SpotMetric(
@@ -790,7 +963,7 @@ class _SpotCard extends StatelessWidget {
           child: GestureDetector(
             onTap: onTap,
             child: Image.asset(
-              'assets/images/Pitch.png',
+              'assets/images/home_pitch_badge.png',
               width: 72,
               fit: BoxFit.contain,
             ),
@@ -923,11 +1096,12 @@ class SpotDetailScreen extends StatelessWidget {
                               runSpacing: 8,
                               children: [
                                 _DetailMetric(
-                                  asset: 'assets/images/Traverse.png',
+                                  asset:
+                                      'assets/images/icon_traverse_thread.png',
                                   text: spot.location,
                                 ),
                                 _DetailMetric(
-                                  asset: 'assets/images/Chat.png',
+                                  asset: 'assets/images/icon_chat_bubble.png',
                                   text: '${spot.climbers} Climbers',
                                 ),
                               ],
@@ -996,7 +1170,7 @@ class SpotDetailScreen extends StatelessWidget {
                 title: 'Comments',
                 child: comments.isEmpty
                     ? Text(
-                        'No visible comments yet.',
+                        'No comments on this line yet.',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.68),
                           fontWeight: FontWeight.w700,
@@ -1308,7 +1482,7 @@ class PartnerListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return _CliffScreenFrame(
       title: 'Climbing Partners',
-      backgroundAsset: 'assets/images/Vibe.png',
+      backgroundAsset: 'assets/images/backdrop_night_wall.png',
       backgroundFit: BoxFit.fill,
       child: AnimatedBuilder(
         animation: store,
@@ -1380,10 +1554,11 @@ class _PartnerCard extends StatelessWidget {
                     runSpacing: 7,
                     children: [
                       _ProfilePill(
+                        icon: Icons.person_rounded,
                         text:
                             '${user.gender == ClimbyGender.male ? '♂' : '♀'} ${user.age}',
                       ),
-                      _ProfilePill(text: user.city),
+                      _ProfilePill(icon: Icons.place_rounded, text: user.city),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -1544,7 +1719,7 @@ class _TrendingPostsScreenState extends State<TrendingPostsScreen> {
   Widget build(BuildContext context) {
     return _CliffScreenFrame(
       title: widget.title,
-      backgroundAsset: 'assets/images/Vibe.png',
+      backgroundAsset: 'assets/images/backdrop_night_wall.png',
       backgroundFit: BoxFit.fill,
       child: AnimatedBuilder(
         animation: widget.store,
@@ -1814,7 +1989,7 @@ class _TrendingHeroCard extends StatelessWidget {
                         ),
                         const Spacer(),
                         Image.asset(
-                          'assets/images/Hangboard.png',
+                          'assets/images/moderation_flag_filled.png',
                           width: 21,
                           height: 21,
                           fit: BoxFit.contain,
@@ -1960,10 +2135,35 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Future<void> _addComment() async {
-    await widget.store.addComment(
-      postId: widget.post.id,
+    final safety = CommunityContentSafety.validate(
       text: _commentController.text,
+      surface: CommunityContentSurface.comment,
+      maxLength: 240,
     );
+    if (!safety.allowed) {
+      await showClimbyNotice(
+        context: context,
+        title: 'Tune this reply',
+        message: safety.message ?? 'Tune this comment before sending.',
+      );
+      return;
+    }
+    try {
+      await widget.store.addComment(
+        postId: widget.post.id,
+        text: _commentController.text,
+      );
+    } on CommunityContentSafetyException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      await showClimbyNotice(
+        context: context,
+        title: 'Tune this reply',
+        message: error.decision.message ?? 'Tune this comment before sending.',
+      );
+      return;
+    }
     _commentController.clear();
   }
 
@@ -2079,8 +2279,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     onTap: () => setState(() => _liked = !_liked),
                     child: Image.asset(
                       _liked
-                          ? 'assets/images/Hangboard.png'
-                          : 'assets/images/Edge.png',
+                          ? 'assets/images/moderation_flag_filled.png'
+                          : 'assets/images/moderation_flag_outline.png',
                       width: 28,
                       height: 28,
                       fit: BoxFit.contain,
@@ -2211,7 +2411,7 @@ class _CommentComposer extends StatelessWidget {
           children: [
             if (showLeading) ...[
               Image.asset(
-                'assets/images/Campus.png',
+                'assets/images/feature_training_icon.png',
                 width: 22,
                 height: 22,
                 fit: BoxFit.contain,
@@ -2228,7 +2428,7 @@ class _CommentComposer extends StatelessWidget {
                   letterSpacing: 0,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Please enter...',
+                  hintText: 'Drop clean beta...',
                   border: InputBorder.none,
                   hintStyle: TextStyle(
                     color: Colors.white.withValues(alpha: 0.38),
@@ -2241,7 +2441,7 @@ class _CommentComposer extends StatelessWidget {
             IconButton(
               onPressed: onSend,
               icon: Image.asset(
-                'assets/images/Knot.png',
+                'assets/images/comment_thread_icon.png',
                 width: 28,
                 height: 28,
                 fit: BoxFit.contain,
@@ -2276,11 +2476,14 @@ class UserProfileScreen extends StatelessWidget {
           return Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset('assets/images/Invite.png', fit: BoxFit.fill),
+              Image.asset(
+                'assets/images/friend_invite_backdrop.png',
+                fit: BoxFit.fill,
+              ),
               Positioned(
                 left: 0,
                 right: 0,
-                top: topInset + 210,
+                top: topInset + 118,
                 bottom: 0,
                 child: Image.asset(
                   user.avatarAsset,
@@ -2298,30 +2501,6 @@ class UserProfileScreen extends StatelessWidget {
                       Colors.black.withValues(alpha: 0.06),
                       Colors.black.withValues(alpha: 0.72),
                     ],
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                top: topInset + 176,
-                child: Center(
-                  child: Container(
-                    width: 86,
-                    height: 86,
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.94),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.34),
-                          blurRadius: 20,
-                          offset: const Offset(0, 9),
-                        ),
-                      ],
-                    ),
-                    child: _Avatar(asset: user.avatarAsset, size: 80),
                   ),
                 ),
               ),
@@ -2385,11 +2564,18 @@ class UserProfileScreen extends StatelessWidget {
                       runSpacing: 8,
                       children: [
                         _ProfilePill(
+                          icon: Icons.person_rounded,
                           text:
                               '${user.gender == ClimbyGender.male ? '♂' : '♀'} ${user.age}',
                         ),
-                        _ProfilePill(text: user.city),
-                        _ProfilePill(text: user.specialty),
+                        _ProfilePill(
+                          icon: Icons.place_rounded,
+                          text: user.city,
+                        ),
+                        _ProfilePill(
+                          icon: Icons.terrain_rounded,
+                          text: user.specialty,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -2422,7 +2608,7 @@ class UserProfileScreen extends StatelessWidget {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.asset(
-                                'assets/images/Gear.png',
+                                'assets/images/place_gear_icon.png',
                                 height: 56,
                                 fit: BoxFit.fill,
                               ),
@@ -2436,7 +2622,7 @@ class UserProfileScreen extends StatelessWidget {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.asset(
-                                'assets/images/Scout.png',
+                                'assets/images/place_scout_icon.png',
                                 height: 56,
                                 fit: BoxFit.fill,
                               ),
@@ -2504,57 +2690,12 @@ class _CruxRadarScreenState extends State<CruxRadarScreen> {
 
     return _CliffScreenFrame(
       title: 'Crux Radar',
-      backgroundAsset: 'assets/images/Vibe.png',
+      backgroundAsset: 'assets/images/backdrop_night_wall.png',
       backgroundFit: BoxFit.fill,
       child: ListView(
         padding: EdgeInsets.fromLTRB(16, topInset + 72, 16, 28),
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF121819).withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFD6FF00), width: 1.2),
-            ),
-            child: Row(
-              children: [
-                Image.asset(
-                  'assets/images/Beacon.png',
-                  width: 66,
-                  height: 66,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Movement scan',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 19,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        'Burn 80 coins to map one crux into body cue, risk cue, and send plan.',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.64),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          height: 1.3,
-                          letterSpacing: 0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const _RadarIntroPanel(),
           const SizedBox(height: 16),
           _RadarChooser(
             title: 'Wall style',
@@ -2686,6 +2827,140 @@ class _RadarChooser extends StatelessWidget {
   }
 }
 
+class _RadarIntroPanel extends StatelessWidget {
+  const _RadarIntroPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 13),
+      decoration: BoxDecoration(
+        color: const Color(0xFF101617).withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFD6FF00).withValues(alpha: 0.72),
+          width: 1.3,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD6FF00).withValues(alpha: 0.12),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 84,
+            height: 76,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0A0F10),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            child: const CustomPaint(painter: _CruxRadarGlyphPainter()),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Movement scan',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF6A1D),
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: const Text(
+                        '80',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Map one crux into body cue, risk cue, and send plan.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.64),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                    letterSpacing: 0,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _RadarMiniTag(text: 'body'),
+                    const SizedBox(width: 6),
+                    _RadarMiniTag(text: 'risk'),
+                    const SizedBox(width: 6),
+                    _RadarMiniTag(text: 'send'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RadarMiniTag extends StatelessWidget {
+  const _RadarMiniTag({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFD6FF00).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(
+          color: const Color(0xFFD6FF00).withValues(alpha: 0.3),
+        ),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Color(0xFFD6FF00),
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0,
+        ),
+      ),
+    );
+  }
+}
+
 class _RadarBalanceChip extends StatelessWidget {
   const _RadarBalanceChip({required this.balance});
 
@@ -2704,7 +2979,7 @@ class _RadarBalanceChip extends StatelessWidget {
       child: Row(
         children: [
           Image.asset(
-            'assets/images/Quickdraw.png',
+            'assets/images/coin_quickdraw.png',
             width: 28,
             height: 28,
             fit: BoxFit.contain,
@@ -2744,7 +3019,7 @@ class _RadarEmptyPanel extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Text(
-        'No scan yet. Pick the wall and fire the radar.',
+        'Pick a wall style and grade band, then run the first scan.',
         textAlign: TextAlign.center,
         style: TextStyle(
           color: Colors.white.withValues(alpha: 0.62),
@@ -2804,7 +3079,7 @@ class _ProfilePostStrip extends StatelessWidget {
           border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         ),
         child: Text(
-          'No posts yet.',
+          'No sends logged yet.',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.72),
@@ -2847,7 +3122,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
   final List<_AiCoachMessage> _notes = [
     const _AiCoachMessage(
       text:
-          'Hi, I am your AI Climbing Coach. Ready to improve your climbing skills today?',
+          'Crag Coach online. Drop a route, grade, or movement problem and I will map the next cue.',
       sentByMe: false,
     ),
   ];
@@ -2875,6 +3150,19 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
   Future<void> _send() async {
     final text = _controller.text.trim();
     if (text.isEmpty || _isTyping) {
+      return;
+    }
+    final safety = CommunityContentSafety.validate(
+      text: text,
+      surface: CommunityContentSurface.assistantPrompt,
+      maxLength: 500,
+    );
+    if (!safety.allowed) {
+      await showClimbyNotice(
+        context: context,
+        title: 'Tune this note',
+        message: safety.message ?? 'Tune this coach note before sending.',
+      );
       return;
     }
     setState(() {
@@ -2906,7 +3194,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     return _CliffScreenFrame(
       title: 'AI Coach',
-      backgroundAsset: 'assets/images/Vibe.png',
+      backgroundAsset: 'assets/images/backdrop_night_wall.png',
       backgroundFit: BoxFit.fill,
       bottom: _CommentComposer(
         controller: _controller,
@@ -3070,7 +3358,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.asset(
-              'assets/images/post/post_boulder_jump.jpg',
+              'assets/images/community_posts/boulder_jump_start.jpg',
               height: 292,
               fit: BoxFit.cover,
             ),
@@ -3086,7 +3374,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(18),
                   child: Image.asset(
-                    'assets/images/Map.png',
+                    'assets/images/place_map_icon.png',
                     width: 34,
                     height: 34,
                     fit: BoxFit.contain,
@@ -3148,7 +3436,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
                       alignment: Alignment.centerRight,
                       children: [
                         Image.asset(
-                          'assets/images/Topo.png',
+                          'assets/images/topo_panel_icon.png',
                           height: 56,
                           width: double.infinity,
                           fit: BoxFit.fill,
@@ -3156,7 +3444,7 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
                         Padding(
                           padding: const EdgeInsets.only(right: 14),
                           child: Image.asset(
-                            'assets/images/Quickdraw.png',
+                            'assets/images/coin_quickdraw.png',
                             width: 34,
                             height: 34,
                             fit: BoxFit.contain,
@@ -3206,7 +3494,7 @@ class _CliffScreenFrame extends StatelessWidget {
     required this.title,
     required this.child,
     this.actions = const [],
-    this.backgroundAsset = 'assets/images/HarborWallBackdrop.png',
+    this.backgroundAsset = 'assets/images/backdrop_harbor_wall.png',
     this.backgroundFit = BoxFit.cover,
     this.bottom,
   });
@@ -3331,28 +3619,50 @@ class _Avatar extends StatelessWidget {
 }
 
 class _ProfilePill extends StatelessWidget {
-  const _ProfilePill({required this.text});
+  const _ProfilePill({required this.icon, required this.text});
 
+  final IconData icon;
   final String text;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 158),
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 9),
       decoration: BoxDecoration(
-        color: const Color(0xFFFF6D1A),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0,
-          ),
+        color: const Color(0xFF101516).withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFFD6FF00).withValues(alpha: 0.48),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: const Color(0xFFD6FF00), size: 13),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -3371,7 +3681,7 @@ class _EmptyFeedPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
-        'No visible posts here.',
+        'No sends on this wall yet.',
         style: TextStyle(
           color: Colors.white.withValues(alpha: 0.62),
           fontWeight: FontWeight.w800,

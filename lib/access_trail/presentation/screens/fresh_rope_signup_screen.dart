@@ -50,15 +50,15 @@ class _FreshRopeSignupScreenState extends State<FreshRopeSignupScreen> {
       await showCragNoticeDialog(
         context: context,
         title: 'Email needed',
-        message: 'Please enter a valid email to set up this local account.',
+        message: 'Add a valid email so Crag can save this local route card.',
       );
       return;
     }
     if (password.trim().length < 6) {
       await showCragNoticeDialog(
         context: context,
-        title: 'Password needed',
-        message: 'Use at least 6 characters so the local account can be saved.',
+        title: 'Rope code needed',
+        message: 'Use at least 6 characters for this local rope code.',
       );
       return;
     }
@@ -66,7 +66,7 @@ class _FreshRopeSignupScreenState extends State<FreshRopeSignupScreen> {
       await showCragNoticeDialog(
         context: context,
         title: 'Passwords differ',
-        message: 'Please make both password fields match before signing up.',
+        message: 'Match both rope-code fields before setting the card.',
       );
       return;
     }
@@ -107,7 +107,7 @@ class _FreshRopeSignupScreenState extends State<FreshRopeSignupScreen> {
       context: context,
       title: 'Agreement needed',
       message:
-          'Please agree to the Terms of Service and Privacy Policy before continuing.',
+          'Review the route rules and privacy notes before setting your card.',
     );
     return false;
   }
@@ -133,7 +133,7 @@ class _FreshRopeSignupScreenState extends State<FreshRopeSignupScreen> {
       body: Stack(
         children: [
           CragImageBackdrop(
-            assetPath: 'assets/images/Vibe.png',
+            assetPath: 'assets/images/backdrop_night_wall.png',
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 112, 24, 34),
               child: Column(
@@ -166,7 +166,7 @@ class _FreshRopeSignupScreenState extends State<FreshRopeSignupScreen> {
                   ),
                   const SizedBox(height: 18),
                   AccessTextField(
-                    label: 'Password',
+                    label: 'Rope code',
                     controller: _passwordController,
                     obscureText: _hidePassword,
                     trailing: IconButton(
@@ -183,7 +183,7 @@ class _FreshRopeSignupScreenState extends State<FreshRopeSignupScreen> {
                   ),
                   const SizedBox(height: 18),
                   AccessTextField(
-                    label: 'Confirm password',
+                    label: 'Confirm rope code',
                     controller: _confirmController,
                     obscureText: _hideConfirm,
                     trailing: IconButton(
@@ -199,7 +199,7 @@ class _FreshRopeSignupScreenState extends State<FreshRopeSignupScreen> {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  NeonHoldButton(label: 'Sign up', onPressed: _signUp),
+                  NeonHoldButton(label: 'Set Route Card', onPressed: _signUp),
                   const SizedBox(height: 22),
                   Center(
                     child: GestureDetector(
@@ -213,9 +213,9 @@ class _FreshRopeSignupScreenState extends State<FreshRopeSignupScreen> {
                             letterSpacing: 0,
                           ),
                           children: const [
-                            TextSpan(text: 'Already have an account? '),
+                            TextSpan(text: 'Already tied in? '),
                             TextSpan(
-                              text: 'Login',
+                              text: 'Clip in',
                               style: TextStyle(
                                 color: Color(0xFFD6FF00),
                                 fontWeight: FontWeight.w800,

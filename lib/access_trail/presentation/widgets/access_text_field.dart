@@ -4,7 +4,7 @@ class AccessTextField extends StatelessWidget {
   const AccessTextField({
     required this.label,
     required this.controller,
-    this.hint = 'Please enter',
+    this.hint = 'Type here',
     this.keyboardType,
     this.obscureText = false,
     this.maxLines = 1,

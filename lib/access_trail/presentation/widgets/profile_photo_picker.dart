@@ -33,7 +33,7 @@ class ProfilePhotoPicker extends StatelessWidget {
               image: DecorationImage(
                 image: hasPhoto
                     ? FileImage(File(photoPath!))
-                    : const AssetImage('assets/images/Grip.png')
+                    : const AssetImage('assets/images/brand_grip_mark.png')
                           as ImageProvider,
                 fit: BoxFit.cover,
               ),

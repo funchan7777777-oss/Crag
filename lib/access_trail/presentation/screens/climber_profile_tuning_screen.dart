@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../field_notes/presentation/screens/crag_home_tabs_screen.dart';
+import '../../../foundation/safety/community_content_safety.dart';
 import '../../data/local_crag_access_cache.dart';
 import '../../domain/models/climber_access_card.dart';
 import '../widgets/access_text_field.dart';
@@ -112,7 +113,8 @@ class _ClimberProfileTuningScreenState
       showCragNoticeDialog(
         context: context,
         title: 'Photo not added',
-        message: 'Please allow photo or camera access, then try again.',
+        message:
+            'Camera or library access is needed to set your climber photo.',
       );
     }
   }
@@ -125,7 +127,20 @@ class _ClimberProfileTuningScreenState
       await showCragNoticeDialog(
         context: context,
         title: 'Nickname needed',
-        message: 'Please enter the name you want shown in Crag.',
+        message: 'Add the name other climbers will see on Crag.',
+      );
+      return;
+    }
+    final nameSafety = CommunityContentSafety.validate(
+      text: trailName,
+      surface: CommunityContentSurface.profile,
+      maxLength: 32,
+    );
+    if (!nameSafety.allowed) {
+      await showCragNoticeDialog(
+        context: context,
+        title: 'Tune this name',
+        message: nameSafety.message ?? 'Tune your climber name before saving.',
       );
       return;
     }
@@ -133,7 +148,20 @@ class _ClimberProfileTuningScreenState
       await showCragNoticeDialog(
         context: context,
         title: 'Bio needed',
-        message: 'Please add a short climbing note before continuing.',
+        message: 'Add one short field note before opening the home wall.',
+      );
+      return;
+    }
+    final bioSafety = CommunityContentSafety.validate(
+      text: fieldBio,
+      surface: CommunityContentSurface.profile,
+      maxLength: 160,
+    );
+    if (!bioSafety.allowed) {
+      await showCragNoticeDialog(
+        context: context,
+        title: 'Tune this note',
+        message: bioSafety.message ?? 'Tune your field note before saving.',
       );
       return;
     }
@@ -167,7 +195,7 @@ class _ClimberProfileTuningScreenState
       body: Stack(
         children: [
           CragImageBackdrop(
-            assetPath: 'assets/images/EveningWallProfile.png',
+            assetPath: 'assets/images/profile_edit_evening_wall.png',
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 112, 24, 34),
               child: Column(
@@ -209,7 +237,7 @@ class _ClimberProfileTuningScreenState
                     label: 'Bio',
                     controller: _bioController,
                     maxLines: 4,
-                    hint: 'Share your current climbing note',
+                    hint: 'Quiet feet, fresh project, good belays...',
                   ),
                   const SizedBox(height: 34),
                   NeonHoldButton(label: 'Continue', onPressed: _finishProfile),

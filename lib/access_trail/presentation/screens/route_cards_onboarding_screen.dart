@@ -22,16 +22,16 @@ class _RouteCardsOnboardingScreenState
 
   static const _cards = [
     _RouteCardFrame(
-      imageAsset: 'assets/images/Bolt.png',
-      buttonAsset: 'assets/images/Arete.png',
+      imageAsset: 'assets/images/onboarding_bolt_wall.png',
+      buttonAsset: 'assets/images/onboarding_action_button.png',
     ),
     _RouteCardFrame(
-      imageAsset: 'assets/images/Ridge.png',
-      buttonAsset: 'assets/images/Arete.png',
+      imageAsset: 'assets/images/onboarding_ridge_wall.png',
+      buttonAsset: 'assets/images/onboarding_action_button.png',
     ),
     _RouteCardFrame(
-      imageAsset: 'assets/images/Summit.png',
-      buttonAsset: 'assets/images/Arete.png',
+      imageAsset: 'assets/images/onboarding_summit_wall.png',
+      buttonAsset: 'assets/images/onboarding_action_button.png',
     ),
   ];
 

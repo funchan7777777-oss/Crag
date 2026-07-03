@@ -74,7 +74,7 @@ class _RidgeEntryLoadingScreenState extends State<RidgeEntryLoadingScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Preparing your local crag',
+                  'Chalking the first wall',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.58),
                     fontSize: 13,

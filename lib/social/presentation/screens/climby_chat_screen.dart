@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../foundation/safety/community_content_safety.dart';
 import '../../data/climby_social_store.dart';
 import 'climby_home_screen.dart';
 import 'climby_video_call_screen.dart';
@@ -44,12 +45,34 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
       await showMutualFollowRequiredDialog(context);
       return;
     }
+    final safety = CommunityContentSafety.validate(
+      text: _controller.text,
+      surface: CommunityContentSurface.directMessage,
+      maxLength: 500,
+    );
+    if (!safety.allowed) {
+      await showClimbyNotice(
+        context: context,
+        title: 'Tune this note',
+        message: safety.message ?? 'Tune this belay note before sending.',
+      );
+      return;
+    }
     try {
       await widget.store.sendMessage(
         userId: widget.user.id,
         text: _controller.text,
       );
       _controller.clear();
+    } on CommunityContentSafetyException catch (error) {
+      if (mounted) {
+        await showClimbyNotice(
+          context: context,
+          title: 'Tune this note',
+          message:
+              error.decision.message ?? 'Tune this belay note before sending.',
+        );
+      }
     } on StateError {
       if (mounted) {
         await showMutualFollowRequiredDialog(context);
@@ -117,7 +140,10 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
+          Image.asset(
+            'assets/images/backdrop_night_wall.png',
+            fit: BoxFit.fill,
+          ),
           DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.24),
@@ -191,7 +217,7 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 28),
                       child: Text(
                         widget.store.isMutualFollow(widget.user.id)
-                            ? 'No messages yet.'
+                            ? 'No partner notes yet.'
                             : 'Chat unlocks only after both climbers follow each other.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -244,7 +270,7 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
                         letterSpacing: 0,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Please enter...',
+                        hintText: 'Send a belay note...',
                         border: InputBorder.none,
                         hintStyle: TextStyle(
                           color: Colors.white.withValues(alpha: 0.38),
@@ -257,7 +283,7 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
                   IconButton(
                     onPressed: _send,
                     icon: Image.asset(
-                      'assets/images/Knot.png',
+                      'assets/images/comment_thread_icon.png',
                       width: 28,
                       height: 28,
                       fit: BoxFit.contain,

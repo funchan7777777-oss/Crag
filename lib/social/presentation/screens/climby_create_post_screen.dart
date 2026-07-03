@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../access_trail/presentation/widgets/crag_notice_dialog.dart';
+import '../../../foundation/safety/community_content_safety.dart';
 import '../../data/climby_social_store.dart';
 import '../../data/climby_wallet_store.dart';
 import 'climby_wallet_screen.dart';
@@ -49,7 +50,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       if (mounted) {
         await _showSmallNotice(
           title: 'Photo not added',
-          message: 'Please allow photo access, then try again.',
+          message: 'Photo library access is needed to add a send photo.',
         );
       }
     }
@@ -74,7 +75,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       if (mounted) {
         await _showSmallNotice(
           title: 'Camera not opened',
-          message: 'Please allow camera access, then try again.',
+          message: 'Camera access is needed to capture a fresh route note.',
         );
       }
     }
@@ -139,7 +140,19 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (_imagePaths.isEmpty || caption.isEmpty || _submitting) {
       await _showSmallNotice(
         title: 'Add your send',
-        message: 'Choose at least one photo and write a short climbing note.',
+        message: 'Add one route photo and a short note from the session.',
+      );
+      return;
+    }
+    final safety = CommunityContentSafety.validate(
+      text: caption,
+      surface: CommunityContentSurface.publicPost,
+      maxLength: 220,
+    );
+    if (!safety.allowed) {
+      await _showSmallNotice(
+        title: 'Tune this post',
+        message: safety.message ?? 'Tune this send note before submitting.',
       );
       return;
     }
@@ -155,12 +168,25 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
 
     setState(() => _submitting = true);
-    await widget.store.submitPostForReview(
-      imagePaths: _imagePaths,
-      caption: caption,
-      category: _category,
-      boosted: _spotlightBoost,
-    );
+    try {
+      await widget.store.submitPostForReview(
+        imagePaths: _imagePaths,
+        caption: caption,
+        category: _category,
+        boosted: _spotlightBoost,
+      );
+    } on CommunityContentSafetyException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _submitting = false);
+      await _showSmallNotice(
+        title: 'Tune this post',
+        message:
+            error.decision.message ?? 'Tune this send note before submitting.',
+      );
+      return;
+    }
     if (!mounted) {
       return;
     }
@@ -169,8 +195,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       context: context,
       title: 'Post submitted',
       message: _spotlightBoost
-          ? 'Your dynamic is queued with a crux spotlight boost and will appear after approval.'
-          : 'Your dynamic was submitted successfully. It is now queued for background review and will appear after approval.',
+          ? 'Your send is clipped to the review rope with a Crux Spotlight boost.'
+          : 'Your send is clipped to the review rope and will appear after approval.',
     );
     if (mounted) {
       Navigator.of(context).pop();
@@ -188,7 +214,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
+          Image.asset(
+            'assets/images/backdrop_night_wall.png',
+            fit: BoxFit.fill,
+          ),
           DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.28),
@@ -198,7 +227,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             padding: EdgeInsets.fromLTRB(16, topInset + 68, 16, 112),
             children: [
               const Text(
-                'Write something about your climb',
+                'Log the move',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 15,
@@ -259,7 +288,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     GestureDetector(
                       onTap: _chooseMediaSource,
                       child: Image.asset(
-                        'assets/images/Cheer.png',
+                        'assets/images/creation_cheer_icon.png',
                         width: 108,
                         height: 108,
                         fit: BoxFit.fill,
@@ -269,7 +298,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     GestureDetector(
                       onTap: _chooseMediaSource,
                       child: Image.asset(
-                        'assets/images/Harness.png',
+                        'assets/images/creation_harness_icon.png',
                         width: 142,
                         height: 52,
                         fit: BoxFit.fill,
@@ -360,7 +389,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Image.asset(
-                        'assets/images/Partner.png',
+                        'assets/images/creation_partner_icon.png',
                         fit: BoxFit.fill,
                       ),
                     ),
@@ -441,7 +470,7 @@ class _SpotlightBoostSwitch extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Optional. Spend 120 coins to add a neon boost tag after review.',
+                    'Optional. Burn 120 coins for a neon boost tag after review.',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.58),
                       fontSize: 12,

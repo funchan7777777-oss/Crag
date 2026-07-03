@@ -48,7 +48,7 @@ class CragPeakNoticeCard extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: Image.asset(
-                    'assets/images/Peak.png',
+                    'assets/images/dialog_peak_badge.png',
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -103,7 +103,7 @@ class CragPeakNoticeCard extends StatelessWidget {
                       behavior: HitTestBehavior.opaque,
                       onTap: onContinue,
                       child: Image.asset(
-                        'assets/images/Lead.png',
+                        'assets/images/dialog_lead_badge.png',
                         height: 48,
                         fit: BoxFit.fill,
                       ),

@@ -59,8 +59,8 @@ class _ModerationReportScreenState extends State<ModerationReportScreen> {
     }
     await showClimbyNotice(
       context: context,
-      title: 'Report submitted',
-      message: 'Thanks for helping keep the climbing community clean.',
+      title: 'Report clipped in',
+      message: 'Thanks. This item is hidden while the safety route is checked.',
     );
     if (mounted) {
       Navigator.of(context).pop(ModerationResult.reported);
@@ -74,8 +74,8 @@ class _ModerationReportScreenState extends State<ModerationReportScreen> {
     }
     await showClimbyNotice(
       context: context,
-      title: 'Blocked',
-      message: 'This content will no longer appear in your local experience.',
+      title: 'Climber blocked',
+      message: 'Their posts, comments, and chat notes are now off your wall.',
     );
     if (mounted) {
       Navigator.of(context).pop(ModerationResult.blocked);
@@ -89,7 +89,7 @@ class _ModerationReportScreenState extends State<ModerationReportScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: CragImageBackdrop(
-        assetPath: 'assets/images/HarborWallBackdrop.png',
+        assetPath: 'assets/images/backdrop_harbor_wall.png',
         scrimOpacity: 0.22,
         child: Padding(
           padding: EdgeInsets.fromLTRB(22, topInset + 6, 22, 24),

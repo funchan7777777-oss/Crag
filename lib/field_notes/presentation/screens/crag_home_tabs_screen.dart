@@ -21,23 +21,23 @@ class _CragHomeTabsScreenState extends State<CragHomeTabsScreen> {
   static const _tabs = [
     _CragTabSpec(
       label: 'Home',
-      inactiveAsset: 'assets/images/Rope.png',
-      activeAsset: 'assets/images/Circle.png',
+      inactiveAsset: 'assets/images/tab_home_inactive.png',
+      activeAsset: 'assets/images/tab_home_active.png',
     ),
     _CragTabSpec(
       label: 'League',
-      inactiveAsset: 'assets/images/League.png',
-      activeAsset: 'assets/images/Squad.png',
+      inactiveAsset: 'assets/images/tab_feed_inactive.png',
+      activeAsset: 'assets/images/tab_feed_active.png',
     ),
     _CragTabSpec(
       label: 'Signal',
-      inactiveAsset: 'assets/images/Signal.png',
-      activeAsset: 'assets/images/Profile.png',
+      inactiveAsset: 'assets/images/tab_messages_inactive.png',
+      activeAsset: 'assets/images/tab_profile_inactive.png',
     ),
     _CragTabSpec(
       label: 'Route',
-      inactiveAsset: 'assets/images/Route.png',
-      activeAsset: 'assets/images/Send.png',
+      inactiveAsset: 'assets/images/tab_profile_active.png',
+      activeAsset: 'assets/images/tab_route_active.png',
     ),
   ];
 
@@ -181,7 +181,7 @@ class _WelcomeCoinDialogState extends State<_WelcomeCoinDialog>
                       child: Transform.rotate(
                         angle: -0.22,
                         child: Image.asset(
-                          'assets/images/Carabiner.png',
+                          'assets/images/access_backdrop_carabiner.png',
                           width: 44,
                           height: 44,
                         ),
@@ -193,14 +193,14 @@ class _WelcomeCoinDialogState extends State<_WelcomeCoinDialog>
                       child: Transform.rotate(
                         angle: 0.2,
                         child: Image.asset(
-                          'assets/images/Quickdraw.png',
+                          'assets/images/coin_quickdraw.png',
                           width: 48,
                           height: 48,
                         ),
                       ),
                     ),
                     Image.asset(
-                      'assets/images/Hangboard.png',
+                      'assets/images/moderation_flag_filled.png',
                       width: 86,
                       height: 86,
                       fit: BoxFit.contain,

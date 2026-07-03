@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../foundation/safety/community_content_safety.dart';
+
 enum ClimbyGender { male, female }
 
 enum ModerationKind { post, comment, user, spot }
@@ -116,7 +118,15 @@ class ClimbySocialStore extends ChangeNotifier {
   }
 
   List<ClimbyPendingPost> get pendingPosts {
-    return List.unmodifiable(_pendingPosts);
+    return List.unmodifiable(
+      _pendingPosts.where((post) {
+        return CommunityContentSafety.validate(
+          text: post.caption,
+          surface: CommunityContentSurface.publicPost,
+          maxLength: 220,
+        ).allowed;
+      }),
+    );
   }
 
   List<ClimbyComment> commentsFor(String postId) {
@@ -128,7 +138,12 @@ class ClimbySocialStore extends ChangeNotifier {
         .where((comment) {
           return !_reportedKeys.contains('comment:${comment.id}') &&
               !_blockedUserIds.contains(comment.userId) &&
-              !_reportedKeys.contains('user:${comment.userId}');
+              !_reportedKeys.contains('user:${comment.userId}') &&
+              CommunityContentSafety.validate(
+                text: comment.text,
+                surface: CommunityContentSurface.comment,
+                maxLength: 240,
+              ).allowed;
         })
         .toList(growable: false);
   }
@@ -139,7 +154,12 @@ class ClimbySocialStore extends ChangeNotifier {
         .where((comment) {
           return !_reportedKeys.contains('comment:${comment.id}') &&
               !_blockedUserIds.contains(comment.userId) &&
-              !_reportedKeys.contains('user:${comment.userId}');
+              !_reportedKeys.contains('user:${comment.userId}') &&
+              CommunityContentSafety.validate(
+                text: comment.text,
+                surface: CommunityContentSurface.comment,
+                maxLength: 240,
+              ).allowed;
         })
         .toList(growable: false);
   }
@@ -148,7 +168,15 @@ class ClimbySocialStore extends ChangeNotifier {
     if (_blockedUserIds.contains(userId)) {
       return const [];
     }
-    return List.unmodifiable(_messagesByUser[userId] ?? const []);
+    return List.unmodifiable(
+      (_messagesByUser[userId] ?? const []).where((message) {
+        return CommunityContentSafety.validate(
+          text: message.text,
+          surface: CommunityContentSurface.directMessage,
+          maxLength: 500,
+        ).allowed;
+      }),
+    );
   }
 
   ClimbyUser? userById(String userId) {
@@ -245,6 +273,11 @@ class ClimbySocialStore extends ChangeNotifier {
     if (trimmed.isEmpty) {
       return;
     }
+    CommunityContentSafety.enforce(
+      text: trimmed,
+      surface: CommunityContentSurface.comment,
+      maxLength: 240,
+    );
     final comment = ClimbyComment(
       id: 'local_${DateTime.now().microsecondsSinceEpoch}',
       postId: postId,
@@ -272,6 +305,11 @@ class ClimbySocialStore extends ChangeNotifier {
     if (cleanPaths.isEmpty || trimmed.isEmpty) {
       return;
     }
+    CommunityContentSafety.enforce(
+      text: trimmed,
+      surface: CommunityContentSurface.publicPost,
+      maxLength: 220,
+    );
     _pendingPosts.insert(
       0,
       ClimbyPendingPost(
@@ -298,6 +336,11 @@ class ClimbySocialStore extends ChangeNotifier {
     if (trimmed.isEmpty) {
       return;
     }
+    CommunityContentSafety.enforce(
+      text: trimmed,
+      surface: CommunityContentSurface.directMessage,
+      maxLength: 500,
+    );
     final message = ClimbyMessage(
       id: 'msg_${DateTime.now().microsecondsSinceEpoch}',
       userId: userId,
@@ -639,8 +682,8 @@ const currentUser = ClimbyUser(
   gender: ClimbyGender.male,
   age: 24,
   city: 'Local Crag',
-  avatarAsset: 'assets/images/Grip.png',
-  bio: 'Building a steady climbing log.',
+  avatarAsset: 'assets/images/brand_grip_mark.png',
+  bio: 'Logging quiet feet, clean beta, and better belays.',
   specialty: 'All-round',
 );
 
@@ -649,152 +692,152 @@ const seedFollowerUserIds = {'alex', 'maya', 'noah'};
 const seedUsers = [
   ClimbyUser(
     id: 'alex',
-    name: 'Alex R.',
+    name: 'Alex Rook',
     gender: ClimbyGender.male,
     age: 22,
     city: 'Los Angeles, CA',
-    avatarAsset: 'assets/images/head/avatar_male_alex.jpg',
-    bio: 'Love indoor bouldering and weekend outdoor trips.',
+    avatarAsset: 'assets/images/avatars/member_alex.jpg',
+    bio: 'Steep gym circuits during the week, limestone mileage on Sundays.',
     specialty: 'Bouldering',
   ),
   ClimbyUser(
     id: 'maya',
-    name: 'Maya C.',
+    name: 'Maya Chen',
     gender: ClimbyGender.female,
     age: 24,
     city: 'Denver, CO',
-    avatarAsset: 'assets/images/head/avatar_female_maya.jpg',
-    bio: 'Training finger strength and cleaner footwork.',
+    avatarAsset: 'assets/images/avatars/member_maya.jpg',
+    bio: 'Fingerboard cycles, cleaner clips, and quiet lead footwork.',
     specialty: 'Lead',
   ),
   ClimbyUser(
     id: 'noah',
-    name: 'Noah K.',
+    name: 'Noah Kline',
     gender: ClimbyGender.male,
     age: 26,
     city: 'Austin, TX',
-    avatarAsset: 'assets/images/head/avatar_male_noah.jpg',
-    bio: 'Looking for patient partners for volume days.',
+    avatarAsset: 'assets/images/avatars/member_noah.jpg',
+    bio: 'Patient volume days, tidy warmups, and board problems after work.',
     specialty: 'Indoor',
   ),
   ClimbyUser(
     id: 'lina',
-    name: 'Lina V.',
+    name: 'Lina Vale',
     gender: ClimbyGender.female,
     age: 23,
     city: 'Portland, OR',
-    avatarAsset: 'assets/images/head/avatar_female_lina.jpg',
-    bio: 'Slab balance, coffee, and early gym sessions.',
+    avatarAsset: 'assets/images/avatars/member_lina.jpg',
+    bio: 'Morning slab puzzles, strong coffee, and no-rush foot swaps.',
     specialty: 'Slab',
   ),
   ClimbyUser(
     id: 'sophia',
-    name: 'Sophia M.',
+    name: 'Sophia Moss',
     gender: ClimbyGender.female,
     age: 25,
     city: 'Boulder, CO',
-    avatarAsset: 'assets/images/head/avatar_female_sophia.jpg',
-    bio: 'Outdoor limestone weekends and training logs.',
+    avatarAsset: 'assets/images/avatars/member_sophia.jpg',
+    bio: 'Weekend limestone notes with weekday endurance homework.',
     specialty: 'Outdoor',
   ),
   ClimbyUser(
     id: 'eli',
-    name: 'Eli W.',
+    name: 'Eli Ward',
     gender: ClimbyGender.male,
     age: 27,
     city: 'Seattle, WA',
-    avatarAsset: 'assets/images/head/avatar_male_eli.jpg',
+    avatarAsset: 'assets/images/avatars/member_eli.jpg',
     bio: 'Route reading and controlled overhang sessions.',
     specialty: 'Overhang',
   ),
   ClimbyUser(
     id: 'zoe',
-    name: 'Zoe N.',
+    name: 'Zoe Nellis',
     gender: ClimbyGender.female,
     age: 21,
     city: 'San Diego, CA',
-    avatarAsset: 'assets/images/head/avatar_female_zoe.jpg',
-    bio: 'Comp-style boulders and dyno practice.',
+    avatarAsset: 'assets/images/avatars/member_zoe.jpg',
+    bio: 'Coordination boulders, camera beta, and repeatable dyno timing.',
     specialty: 'Dyno',
   ),
   ClimbyUser(
     id: 'clara',
-    name: 'Clara P.',
+    name: 'Clara Pike',
     gender: ClimbyGender.female,
     age: 28,
     city: 'Salt Lake City, UT',
-    avatarAsset: 'assets/images/head/avatar_female_clara.jpg',
-    bio: 'Calm belays and long alpine days.',
+    avatarAsset: 'assets/images/avatars/member_clara.jpg',
+    bio: 'Calm belays, clean anchors, and long ridge approaches.',
     specialty: 'Alpine',
   ),
   ClimbyUser(
     id: 'kai',
-    name: 'Kai T.',
+    name: 'Kai Torres',
     gender: ClimbyGender.male,
     age: 23,
     city: 'Chicago, IL',
-    avatarAsset: 'assets/images/head/avatar_male_kai.jpg',
-    bio: 'Power endurance and board climbing after work.',
+    avatarAsset: 'assets/images/avatars/member_kai.jpg',
+    bio: 'After-work board laps and power-endurance timers.',
     specialty: 'Board',
   ),
   ClimbyUser(
     id: 'iris',
-    name: 'Iris F.',
+    name: 'Iris Finch',
     gender: ClimbyGender.female,
     age: 22,
     city: 'Phoenix, AZ',
-    avatarAsset: 'assets/images/head/avatar_female_iris.jpg',
-    bio: 'New to outdoor sport routes, steady learner.',
+    avatarAsset: 'assets/images/avatars/member_iris.jpg',
+    bio: 'Steady sport-route learner building careful clip stances.',
     specialty: 'Sport',
   ),
   ClimbyUser(
     id: 'nora',
-    name: 'Nora H.',
+    name: 'Nora Hale',
     gender: ClimbyGender.female,
     age: 24,
     city: 'Brooklyn, NY',
-    avatarAsset: 'assets/images/head/avatar_female_nora.jpg',
-    bio: 'Gym regular, loves coordination problems.',
+    avatarAsset: 'assets/images/avatars/member_nora.jpg',
+    bio: 'Gym regular chasing coordination sets with better body tension.',
     specialty: 'Coordination',
   ),
   ClimbyUser(
     id: 'rhea',
-    name: 'Rhea D.',
+    name: 'Rhea Dune',
     gender: ClimbyGender.female,
     age: 26,
     city: 'Las Vegas, NV',
-    avatarAsset: 'assets/images/head/avatar_female_rhea.jpg',
-    bio: 'Desert trips, careful beta, and good snacks.',
+    avatarAsset: 'assets/images/avatars/member_rhea.jpg',
+    bio: 'Desert crag days, careful rack notes, and snack beta.',
     specialty: 'Trad',
   ),
   ClimbyUser(
     id: 'luca',
-    name: 'Luca B.',
+    name: 'Luca Bell',
     gender: ClimbyGender.male,
     age: 25,
     city: 'Miami, FL',
-    avatarAsset: 'assets/images/head/avatar_male_luca.jpg',
-    bio: 'Training for stronger lockoffs.',
+    avatarAsset: 'assets/images/avatars/member_luca.jpg',
+    bio: 'Lockoff strength blocks with a strict rest timer.',
     specialty: 'Strength',
   ),
   ClimbyUser(
     id: 'ava',
-    name: 'Ava S.',
+    name: 'Ava Sato',
     gender: ClimbyGender.female,
     age: 23,
     city: 'Los Angeles, CA',
-    avatarAsset: 'assets/images/head/avatar_female_ava.jpg',
-    bio: 'Projecting vertical climbs and sharing beta.',
+    avatarAsset: 'assets/images/avatars/member_ava.jpg',
+    bio: 'Vertical projects, small footholds, and shareable beta notes.',
     specialty: 'Vertical',
   ),
   ClimbyUser(
     id: 'theo',
-    name: 'Theo J.',
+    name: 'Theo Jules',
     gender: ClimbyGender.male,
     age: 29,
     city: 'Boston, MA',
-    avatarAsset: 'assets/images/head/avatar_male_theo.jpg',
-    bio: 'Careful lead sessions and gym meetups.',
+    avatarAsset: 'assets/images/avatars/member_theo.jpg',
+    bio: 'Measured lead sessions and mellow partner meetups.',
     specialty: 'Lead',
   ),
 ];
@@ -803,8 +846,8 @@ const seedPosts = [
   ClimbyPost(
     id: 'p01',
     userId: 'alex',
-    imageAsset: 'assets/images/post/post_outdoor_limestone.jpg',
-    caption: 'Finally sent my project!',
+    imageAsset: 'assets/images/community_posts/outdoor_limestone_route.jpg',
+    caption: 'Last crux finally clicked on the third burn.',
     category: 'Outdoor',
     timeAgo: '2h ago',
     likeCount: 128,
@@ -812,8 +855,8 @@ const seedPosts = [
   ClimbyPost(
     id: 'p02',
     userId: 'maya',
-    imageAsset: 'assets/images/post/post_boulder_jump.jpg',
-    caption: 'Coordination day paid off.',
+    imageAsset: 'assets/images/community_posts/boulder_jump_start.jpg',
+    caption: 'Coordination set finally matched the rhythm.',
     category: 'Bouldering',
     timeAgo: '4h ago',
     likeCount: 64,
@@ -821,8 +864,8 @@ const seedPosts = [
   ClimbyPost(
     id: 'p03',
     userId: 'noah',
-    imageAsset: 'assets/images/post/post_rope_wall_start.jpg',
-    caption: 'Warmup laps before work.',
+    imageAsset: 'assets/images/community_posts/rope_wall_start.jpg',
+    caption: 'Two quiet warmup laps before the morning shift.',
     category: 'Training',
     timeAgo: '5h ago',
     likeCount: 37,
@@ -830,7 +873,7 @@ const seedPosts = [
   ClimbyPost(
     id: 'p04',
     userId: 'lina',
-    imageAsset: 'assets/images/post/post_blue_roof_move.jpg',
+    imageAsset: 'assets/images/community_posts/blue_roof_match.jpg',
     caption: 'Roof sequence finally clicked.',
     category: 'Bouldering',
     timeAgo: '6h ago',
@@ -839,8 +882,8 @@ const seedPosts = [
   ClimbyPost(
     id: 'p05',
     userId: 'sophia',
-    imageAsset: 'assets/images/post/post_finish_smile.jpg',
-    caption: 'Clean finish, clean day.',
+    imageAsset: 'assets/images/community_posts/finish_smile.jpg',
+    caption: 'Topped out with one calm breath left.',
     category: 'Outdoor',
     timeAgo: '8h ago',
     likeCount: 156,
@@ -848,7 +891,7 @@ const seedPosts = [
   ClimbyPost(
     id: 'p06',
     userId: 'eli',
-    imageAsset: 'assets/images/post/post_pink_slab_reach.jpg',
+    imageAsset: 'assets/images/community_posts/pink_slab_reach.jpg',
     caption: 'Small feet, big trust.',
     category: 'Training',
     timeAgo: '9h ago',
@@ -857,8 +900,8 @@ const seedPosts = [
   ClimbyPost(
     id: 'p07',
     userId: 'zoe',
-    imageAsset: 'assets/images/post/post_red_cave_match.jpg',
-    caption: 'Cave session with fresh tape.',
+    imageAsset: 'assets/images/community_posts/red_cave_match.jpg',
+    caption: 'Fresh tape, steep cave, one better foot sequence.',
     category: 'Bouldering',
     timeAgo: '10h ago',
     likeCount: 83,
@@ -866,7 +909,7 @@ const seedPosts = [
   ClimbyPost(
     id: 'p08',
     userId: 'clara',
-    imageAsset: 'assets/images/post/post_indoor_rope_class.jpg',
+    imageAsset: 'assets/images/community_posts/indoor_rope_class.jpg',
     caption: 'Partner checks before every burn.',
     category: 'Video',
     timeAgo: '12h ago',
@@ -875,7 +918,7 @@ const seedPosts = [
   ClimbyPost(
     id: 'p09',
     userId: 'kai',
-    imageAsset: 'assets/images/post/post_blue_volume_press.jpg',
+    imageAsset: 'assets/images/community_posts/blue_volume_press.jpg',
     caption: 'Press, breathe, reset.',
     category: 'Bouldering',
     timeAgo: '1d ago',
@@ -884,7 +927,7 @@ const seedPosts = [
   ClimbyPost(
     id: 'p10',
     userId: 'iris',
-    imageAsset: 'assets/images/post/post_rope_clip_high.jpg',
+    imageAsset: 'assets/images/community_posts/rope_clip_high.jpg',
     caption: 'Clipped smooth at the crux.',
     category: 'Outdoor',
     timeAgo: '1d ago',
@@ -893,7 +936,7 @@ const seedPosts = [
   ClimbyPost(
     id: 'p11',
     userId: 'nora',
-    imageAsset: 'assets/images/post/post_purple_wall_crux.jpg',
+    imageAsset: 'assets/images/community_posts/purple_wall_crux.jpg',
     caption: 'Purple wall felt wild.',
     category: 'Training',
     timeAgo: '1d ago',
@@ -902,7 +945,7 @@ const seedPosts = [
   ClimbyPost(
     id: 'p12',
     userId: 'rhea',
-    imageAsset: 'assets/images/post/post_gym_partner_beta.jpg',
+    imageAsset: 'assets/images/community_posts/gym_partner_beta.jpg',
     caption: 'Partner beta changed everything.',
     category: 'Bouldering',
     timeAgo: '2d ago',
@@ -911,7 +954,7 @@ const seedPosts = [
   ClimbyPost(
     id: 'p13',
     userId: 'luca',
-    imageAsset: 'assets/images/post/post_overhang_attempt.jpg',
+    imageAsset: 'assets/images/community_posts/overhang_attempt.jpg',
     caption: 'One more overhang attempt.',
     category: 'Training',
     timeAgo: '2d ago',
@@ -920,7 +963,7 @@ const seedPosts = [
   ClimbyPost(
     id: 'p14',
     userId: 'ava',
-    imageAsset: 'assets/images/post/post_yellow_wall_send.jpg',
+    imageAsset: 'assets/images/community_posts/yellow_wall_send.jpg',
     caption: 'Yellow holds, calm feet.',
     category: 'Indoor',
     timeAgo: '2d ago',
@@ -929,8 +972,8 @@ const seedPosts = [
   ClimbyPost(
     id: 'p15',
     userId: 'theo',
-    imageAsset: 'assets/images/post/post_white_wall_pose.jpg',
-    caption: 'Rest day turned into drills.',
+    imageAsset: 'assets/images/community_posts/white_wall_pose.jpg',
+    caption: 'Rest day became a low-pump footwork drill.',
     category: 'Training',
     timeAgo: '3d ago',
     likeCount: 33,
@@ -938,7 +981,7 @@ const seedPosts = [
   ClimbyPost(
     id: 'p16',
     userId: 'alex',
-    imageAsset: 'assets/images/post/post_green_volume_cross.jpg',
+    imageAsset: 'assets/images/community_posts/green_volume_cross.jpg',
     caption: 'Cross move stayed honest.',
     category: 'Indoor',
     timeAgo: '3d ago',
@@ -951,7 +994,7 @@ const seedSpots = [
     id: 'summit',
     title: 'Summit Rock Gym',
     location: 'Denver, USA',
-    imageAsset: 'assets/images/spots/spot_summit_rockville.jpg',
+    imageAsset: 'assets/images/spots/summit_rockville_wall.jpg',
     rating: '4.9',
     climbers: '8.4K',
     style: 'Indoor',
@@ -962,7 +1005,7 @@ const seedSpots = [
     id: 'valley',
     title: 'Valley Face',
     location: 'Boulder, USA',
-    imageAsset: 'assets/images/spots/spot_valley_luch.jpg',
+    imageAsset: 'assets/images/spots/valley_luch_sector.jpg',
     rating: '4.8',
     climbers: '6.2K',
     style: 'Outdoor',
@@ -973,7 +1016,7 @@ const seedSpots = [
     id: 'campus',
     title: 'Campus Board Lab',
     location: 'Austin, USA',
-    imageAsset: 'assets/images/spots/spot_campus_tokyo.jpg',
+    imageAsset: 'assets/images/spots/campus_tokyo_wall.jpg',
     rating: '4.7',
     climbers: '3.1K',
     style: 'Training',
@@ -984,7 +1027,7 @@ const seedSpots = [
     id: 'cave',
     title: 'Red Cave Wall',
     location: 'Portland, USA',
-    imageAsset: 'assets/images/spots/spot_red_cave_seattle.jpg',
+    imageAsset: 'assets/images/spots/red_cave_seattle.jpg',
     rating: '4.9',
     climbers: '5.7K',
     style: 'Bouldering',
@@ -995,7 +1038,7 @@ const seedSpots = [
     id: 'harbor',
     title: 'Harbor Lead House',
     location: 'Seattle, USA',
-    imageAsset: 'assets/images/spots/spot_harbor_aiguille.jpg',
+    imageAsset: 'assets/images/spots/harbor_aiguille_wall.jpg',
     rating: '4.8',
     climbers: '4.9K',
     style: 'Lead',
@@ -1006,7 +1049,7 @@ const seedSpots = [
     id: 'mesa',
     title: 'Mesa Rope Works',
     location: 'Phoenix, USA',
-    imageAsset: 'assets/images/spots/spot_mesa_rei.jpg',
+    imageAsset: 'assets/images/spots/mesa_rei_routes.jpg',
     rating: '4.6',
     climbers: '2.8K',
     style: 'Ropes',
@@ -1017,7 +1060,7 @@ const seedSpots = [
     id: 'ridge',
     title: 'North Ridge Yard',
     location: 'Boston, USA',
-    imageAsset: 'assets/images/spots/spot_north_ridge_wall.jpg',
+    imageAsset: 'assets/images/spots/north_ridge_wall.jpg',
     rating: '4.7',
     climbers: '3.6K',
     style: 'Mixed',
@@ -1028,7 +1071,7 @@ const seedSpots = [
     id: 'bloc',
     title: 'Bloc Yard',
     location: 'Chicago, USA',
-    imageAsset: 'assets/images/spots/spot_bloc_yard_mats.jpg',
+    imageAsset: 'assets/images/spots/bloc_yard_mats.jpg',
     rating: '4.8',
     climbers: '4.2K',
     style: 'Bouldering',
@@ -1042,7 +1085,7 @@ const seedComments = [
     id: 'c01',
     postId: 'p01',
     userId: 'ava',
-    text: 'See you at the gym!',
+    text: 'Save me a warmup lap next session.',
     createdLabel: '1h ago',
   ),
   ClimbyComment(
@@ -1630,9 +1673,12 @@ const seedVideoComments = [
 const climbyCategories = ['All', 'Bouldering', 'Outdoor', 'Training', 'Video'];
 
 const reportReasons = [
-  'Spam or Advertising',
-  'False Information',
-  'Harassment or Bullying',
-  'Hate Speech',
-  'Other',
+  'Off-route promotion or spam',
+  'Explicit adult material',
+  'Threats or unsafe pressure',
+  'Private details exposed',
+  'Misleading route or safety info',
+  'Harassment or targeting',
+  'Discriminatory content',
+  'Other safety concern',
 ];

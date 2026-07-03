@@ -24,8 +24,24 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/images/head/
-    - assets/images/post/
+    - assets/images/avatars/
+    - assets/images/community_posts/
     - assets/images/spots/
     - assets/images/video_covers/
     - assets/videos/
+  fonts:
+    - family: ClimbySans
+      fonts:
+        - asset: assets/fonts/climby_sans_variable.ttf
+    - family: ClimbyDisplay
+      fonts:
+        - asset: assets/fonts/climby_display_semibold.ttf
+          weight: 600
+        - asset: assets/fonts/climby_display_extrabold.ttf
+          weight: 800
+    - family: ClimbyDigits
+      fonts:
+        - asset: assets/fonts/climby_digits_semibold.ttf
+          weight: 600
+        - asset: assets/fonts/climby_digits_bold.ttf
+          weight: 700
