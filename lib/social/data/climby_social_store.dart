@@ -81,7 +81,7 @@ class ClimbySocialStore extends ChangeNotifier {
     return seedUsers
         .where(
           (user) =>
-              _mutualFollowUserIds.contains(user.id) &&
+              isFollower(user.id) &&
               !_blockedUserIds.contains(user.id) &&
               !_reportedKeys.contains('user:${user.id}'),
         )
@@ -133,6 +133,17 @@ class ClimbySocialStore extends ChangeNotifier {
         .toList(growable: false);
   }
 
+  List<ClimbyComment> videoCommentsFor(String videoId) {
+    return seedVideoComments
+        .where((comment) => comment.postId == videoId)
+        .where((comment) {
+          return !_reportedKeys.contains('comment:${comment.id}') &&
+              !_blockedUserIds.contains(comment.userId) &&
+              !_reportedKeys.contains('user:${comment.userId}');
+        })
+        .toList(growable: false);
+  }
+
   List<ClimbyMessage> messagesFor(String userId) {
     if (_blockedUserIds.contains(userId)) {
       return const [];
@@ -176,11 +187,20 @@ class ClimbySocialStore extends ChangeNotifier {
   }
 
   bool isMutualFollow(String userId) {
-    return _mutualFollowUserIds.contains(userId);
+    return isFollower(userId) && _followingUserIds.contains(userId);
+  }
+
+  bool isFollower(String userId) {
+    return seedFollowerUserIds.contains(userId) ||
+        _mutualFollowUserIds.contains(userId);
   }
 
   bool isUserBlocked(String userId) {
     return _blockedUserIds.contains(userId);
+  }
+
+  bool isReported(String key) {
+    return _reportedKeys.contains(key);
   }
 
   Future<void> requestFollow(String userId) async {
@@ -192,6 +212,10 @@ class ClimbySocialStore extends ChangeNotifier {
       return;
     }
     _followingUserIds.add(userId);
+    if (isFollower(userId)) {
+      _mutualFollowUserIds.add(userId);
+      await _writeStringSet(_mutualFollowsKey, _mutualFollowUserIds);
+    }
     await _writeStringSet(_followingKey, _followingUserIds);
     notifyListeners();
   }
@@ -618,6 +642,8 @@ const currentUser = ClimbyUser(
   bio: 'Building a steady climbing log.',
   specialty: 'All-round',
 );
+
+const seedFollowerUserIds = {'alex', 'maya', 'noah'};
 
 const seedUsers = [
   ClimbyUser(
@@ -1405,6 +1431,198 @@ const seedComments = [
     userId: 'nora',
     text: 'The reset style is fun: enough comp movement without chaos.',
     createdLabel: '2h ago',
+  ),
+];
+
+const seedVideoComments = [
+  ClimbyComment(
+    id: 'vc01',
+    postId: 'v01',
+    userId: 'maya',
+    text: 'Quiet feet through the high step. Nice control.',
+    createdLabel: '12m ago',
+  ),
+  ClimbyComment(
+    id: 'vc02',
+    postId: 'v01',
+    userId: 'kai',
+    text: 'That left smear before the finish is the whole climb.',
+    createdLabel: '36m ago',
+  ),
+  ClimbyComment(
+    id: 'vc03',
+    postId: 'v01',
+    userId: 'lina',
+    text: 'Good reminder not to rush slab movement.',
+    createdLabel: '1h ago',
+  ),
+  ClimbyComment(
+    id: 'vc04',
+    postId: 'v02',
+    userId: 'alex',
+    text: 'The roof match looked way calmer than it probably felt.',
+    createdLabel: '9m ago',
+  ),
+  ClimbyComment(
+    id: 'vc05',
+    postId: 'v02',
+    userId: 'zoe',
+    text: 'Love the hip drop before the long reach.',
+    createdLabel: '44m ago',
+  ),
+  ClimbyComment(
+    id: 'vc06',
+    postId: 'v02',
+    userId: 'eli',
+    text: 'That link is all tension. Strong send.',
+    createdLabel: '2h ago',
+  ),
+  ClimbyComment(
+    id: 'vc07',
+    postId: 'v03',
+    userId: 'noah',
+    text: 'Short contact time is improving. Keep the shoulders engaged.',
+    createdLabel: '18m ago',
+  ),
+  ClimbyComment(
+    id: 'vc08',
+    postId: 'v03',
+    userId: 'sophia',
+    text: 'This drill is brutal after limit boulders.',
+    createdLabel: '57m ago',
+  ),
+  ClimbyComment(
+    id: 'vc09',
+    postId: 'v03',
+    userId: 'theo',
+    text: 'Try alternating the first catch next session.',
+    createdLabel: '3h ago',
+  ),
+  ClimbyComment(
+    id: 'vc10',
+    postId: 'v04',
+    userId: 'lina',
+    text: 'Great warmup pace before pulling on smaller holds.',
+    createdLabel: '22m ago',
+  ),
+  ClimbyComment(
+    id: 'vc11',
+    postId: 'v04',
+    userId: 'clara',
+    text: 'I like the shakeout between clips. Looks sustainable.',
+    createdLabel: '1h ago',
+  ),
+  ClimbyComment(
+    id: 'vc12',
+    postId: 'v04',
+    userId: 'iris',
+    text: 'Saving this for my next rope day.',
+    createdLabel: '4h ago',
+  ),
+  ClimbyComment(
+    id: 'vc13',
+    postId: 'v05',
+    userId: 'zoe',
+    text: 'Volume press timing is perfect here.',
+    createdLabel: '14m ago',
+  ),
+  ClimbyComment(
+    id: 'vc14',
+    postId: 'v05',
+    userId: 'kai',
+    text: 'The reset needs more climbs like this.',
+    createdLabel: '49m ago',
+  ),
+  ClimbyComment(
+    id: 'vc15',
+    postId: 'v05',
+    userId: 'ava',
+    text: 'That catch would scare me, but the foot placement makes sense.',
+    createdLabel: '2h ago',
+  ),
+  ClimbyComment(
+    id: 'vc16',
+    postId: 'v06',
+    userId: 'eli',
+    text: 'Outdoor beta changed right at the crux. Nice read.',
+    createdLabel: '31m ago',
+  ),
+  ClimbyComment(
+    id: 'vc17',
+    postId: 'v06',
+    userId: 'clara',
+    text: 'Those holds look sharper than the video makes them seem.',
+    createdLabel: '1h ago',
+  ),
+  ClimbyComment(
+    id: 'vc18',
+    postId: 'v06',
+    userId: 'maya',
+    text: 'Good patience before committing to the move.',
+    createdLabel: '5h ago',
+  ),
+  ClimbyComment(
+    id: 'vc19',
+    postId: 'v07',
+    userId: 'lina',
+    text: 'That slow foot swap is the beta I needed.',
+    createdLabel: '7m ago',
+  ),
+  ClimbyComment(
+    id: 'vc20',
+    postId: 'v07',
+    userId: 'nora',
+    text: 'Slab panic is real. This looked composed.',
+    createdLabel: '40m ago',
+  ),
+  ClimbyComment(
+    id: 'vc21',
+    postId: 'v07',
+    userId: 'alex',
+    text: 'Clean weight shift before standing up.',
+    createdLabel: '2h ago',
+  ),
+  ClimbyComment(
+    id: 'vc22',
+    postId: 'v08',
+    userId: 'kai',
+    text: 'Second try timing was money.',
+    createdLabel: '19m ago',
+  ),
+  ClimbyComment(
+    id: 'vc23',
+    postId: 'v08',
+    userId: 'zoe',
+    text: 'The preload before the dyno is super useful to see.',
+    createdLabel: '1h ago',
+  ),
+  ClimbyComment(
+    id: 'vc24',
+    postId: 'v08',
+    userId: 'rhea',
+    text: 'Coordination moves finally make sense when slowed down like this.',
+    createdLabel: '3h ago',
+  ),
+  ClimbyComment(
+    id: 'vc25',
+    postId: 'v09',
+    userId: 'rhea',
+    text: 'That shakeout bought the whole finish.',
+    createdLabel: '25m ago',
+  ),
+  ClimbyComment(
+    id: 'vc26',
+    postId: 'v09',
+    userId: 'eli',
+    text: 'Strong pacing through the steep section.',
+    createdLabel: '1h ago',
+  ),
+  ClimbyComment(
+    id: 'vc27',
+    postId: 'v09',
+    userId: 'sophia',
+    text: 'Forearms hurt just watching this.',
+    createdLabel: '4h ago',
   ),
 ];
 

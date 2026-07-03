@@ -47,11 +47,11 @@ class _CragHomeTabsScreenState extends State<CragHomeTabsScreen> {
         selectTab: (index) => setState(() => _activeIndex = index),
         child: IndexedStack(
           index: _activeIndex,
-          children: const [
-            CragOverviewScreen(),
-            ClimbyVideoFeedScreen(),
-            ClimbyMessagesScreen(),
-            ClimbyMeScreen(),
+          children: [
+            const CragOverviewScreen(),
+            ClimbyVideoFeedScreen(active: _activeIndex == 1),
+            const ClimbyMessagesScreen(),
+            const ClimbyMeScreen(),
           ],
         ),
       ),

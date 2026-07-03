@@ -843,15 +843,20 @@ class SpotDetailScreen extends StatelessWidget {
       title: spot.title,
       actions: [
         IconButton(
-          onPressed: () => openModerationScreen(
-            context: context,
-            store: store,
-            target: ModerationTarget(
-              kind: ModerationKind.spot,
-              key: 'spot:${spot.id}',
-              title: spot.title,
-            ),
-          ),
+          onPressed: () async {
+            final result = await openModerationScreen(
+              context: context,
+              store: store,
+              target: ModerationTarget(
+                kind: ModerationKind.spot,
+                key: 'spot:${spot.id}',
+                title: spot.title,
+              ),
+            );
+            if (context.mounted && result != null) {
+              Navigator.of(context).pop();
+            }
+          },
           icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
         ),
       ],
@@ -1823,16 +1828,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       title: 'Post',
       actions: [
         IconButton(
-          onPressed: () => openModerationScreen(
-            context: context,
-            store: widget.store,
-            target: ModerationTarget(
-              kind: ModerationKind.post,
-              key: 'post:${widget.post.id}',
-              title: widget.post.caption,
-              userId: widget.post.userId,
-            ),
-          ),
+          onPressed: () async {
+            final result = await openModerationScreen(
+              context: context,
+              store: widget.store,
+              target: ModerationTarget(
+                kind: ModerationKind.post,
+                key: 'post:${widget.post.id}',
+                title: widget.post.caption,
+                userId: widget.post.userId,
+              ),
+            );
+            if (mounted && result != null) {
+              Navigator.of(context).pop();
+            }
+          },
           icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
         ),
       ],
@@ -2178,16 +2188,21 @@ class UserProfileScreen extends StatelessWidget {
                     ),
                     const Spacer(),
                     IconButton(
-                      onPressed: () => openModerationScreen(
-                        context: context,
-                        store: store,
-                        target: ModerationTarget(
-                          kind: ModerationKind.user,
-                          key: 'user:${user.id}',
-                          title: user.name,
-                          userId: user.id,
-                        ),
-                      ),
+                      onPressed: () async {
+                        final result = await openModerationScreen(
+                          context: context,
+                          store: store,
+                          target: ModerationTarget(
+                            kind: ModerationKind.user,
+                            key: 'user:${user.id}',
+                            title: user.name,
+                            userId: user.id,
+                          ),
+                        );
+                        if (context.mounted && result != null) {
+                          Navigator.of(context).pop();
+                        }
+                      },
                       icon: const Icon(
                         Icons.more_vert_rounded,
                         color: Colors.white,

@@ -7,7 +7,9 @@ import 'climby_home_screen.dart';
 import 'moderation_report_screen.dart';
 
 class ClimbyVideoFeedScreen extends StatefulWidget {
-  const ClimbyVideoFeedScreen({super.key});
+  const ClimbyVideoFeedScreen({this.active = true, super.key});
+
+  final bool active;
 
   @override
   State<ClimbyVideoFeedScreen> createState() => _ClimbyVideoFeedScreenState();
@@ -17,8 +19,9 @@ class _ClimbyVideoFeedScreenState extends State<ClimbyVideoFeedScreen> {
   final _store = ClimbySocialStore.instance;
   final _pageController = PageController();
   final Set<String> _likedIds = {};
-  String _activeFilter = 'For you';
+  String _activeFilter = 'All';
   String? _burstId;
+  int _activePageIndex = 0;
 
   @override
   void initState() {
@@ -33,21 +36,59 @@ class _ClimbyVideoFeedScreenState extends State<ClimbyVideoFeedScreen> {
   }
 
   List<ClimbyVideoClip> get _visibleVideos {
-    final videos = switch (_activeFilter) {
+    final videos = climbyVideoClips
+        .where(
+          (clip) =>
+              !_store.isUserBlocked(clip.userId) &&
+              !_store.isReported('video:${clip.id}') &&
+              !_store.isReported('user:${clip.userId}'),
+        )
+        .toList(growable: false);
+    return switch (_activeFilter) {
       'Following' =>
-        climbyVideoClips
+        videos
             .where((clip) => _store.isFollowing(clip.userId))
             .toList(growable: false),
       'Popular' => [
-        ...climbyVideoClips,
+        ...videos,
       ]..sort((a, b) => b.likeCount.compareTo(a.likeCount)),
-      _ => climbyVideoClips,
+      _ => videos,
     };
-    return videos.isEmpty ? climbyVideoClips.take(3).toList() : videos;
+  }
+
+  void _syncActivePageWithVisibleVideos() {
+    final videos = _visibleVideos;
+    final nextIndex = videos.isEmpty
+        ? 0
+        : _activePageIndex.clamp(0, videos.length - 1).toInt();
+    setState(() => _activePageIndex = nextIndex);
+    if (_pageController.hasClients && videos.isNotEmpty) {
+      _pageController.jumpToPage(nextIndex);
+    }
+  }
+
+  Future<void> _openVideoModeration(ClimbyVideoClip clip) async {
+    final result = await openModerationScreen(
+      context: context,
+      store: _store,
+      target: ModerationTarget(
+        kind: ModerationKind.post,
+        key: 'video:${clip.id}',
+        title: clip.title,
+        userId: clip.userId,
+      ),
+    );
+    if (!mounted || result == null) {
+      return;
+    }
+    _syncActivePageWithVisibleVideos();
   }
 
   void _setFilter(String filter) {
-    setState(() => _activeFilter = filter);
+    setState(() {
+      _activeFilter = filter;
+      _activePageIndex = 0;
+    });
     if (_pageController.hasClients) {
       _pageController.jumpToPage(0);
     }
@@ -73,6 +114,33 @@ class _ClimbyVideoFeedScreenState extends State<ClimbyVideoFeedScreen> {
     _like(clip);
   }
 
+  Future<void> _toggleFollow(ClimbyVideoClip clip) async {
+    final wasFollowing = _store.isFollowing(clip.userId);
+    await _store.toggleFollow(clip.userId);
+    if (!mounted || _activeFilter != 'Following' || !wasFollowing) {
+      return;
+    }
+
+    final videos = _visibleVideos;
+    final nextIndex = videos.isEmpty
+        ? 0
+        : _activePageIndex.clamp(0, videos.length - 1).toInt();
+    setState(() => _activePageIndex = nextIndex);
+    if (_pageController.hasClients && videos.isNotEmpty) {
+      _pageController.jumpToPage(nextIndex);
+    }
+  }
+
+  void _openComments(ClimbyVideoClip clip) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.42),
+      isScrollControlled: true,
+      builder: (_) => _VideoCommentsSheet(store: _store, clip: clip),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
@@ -81,46 +149,46 @@ class _ClimbyVideoFeedScreenState extends State<ClimbyVideoFeedScreen> {
       animation: _store,
       builder: (context, _) {
         final videos = _visibleVideos;
+        final activePageIndex = videos.isEmpty
+            ? 0
+            : _activePageIndex.clamp(0, videos.length - 1).toInt();
+        final activeClip = videos.isEmpty ? null : videos[activePageIndex];
         return ColoredBox(
           color: const Color(0xFF0D1112),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              PageView.builder(
-                controller: _pageController,
-                scrollDirection: Axis.vertical,
-                itemCount: videos.length,
-                itemBuilder: (context, index) {
-                  final clip = videos[index];
-                  return _VideoFeedPage(
-                    clip: clip,
-                    store: _store,
-                    liked: _likedIds.contains(clip.id),
-                    showBurst: _burstId == clip.id,
-                    onLike: () => _like(clip),
-                    onToggleLike: () => _toggleLike(clip),
-                    onOpen: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => ClimbyVideoWatchScreen(
-                          clip: clip,
-                          store: _store,
-                          initiallyLiked: _likedIds.contains(clip.id),
-                        ),
-                      ),
-                    ),
-                    onReport: () => openModerationScreen(
-                      context: context,
+              if (videos.isEmpty)
+                const _VideoEmptyState()
+              else
+                PageView.builder(
+                  controller: _pageController,
+                  scrollDirection: Axis.vertical,
+                  onPageChanged: (index) {
+                    setState(() => _activePageIndex = index);
+                  },
+                  itemCount: videos.length,
+                  itemBuilder: (context, index) {
+                    final clip = videos[index];
+                    final comments = _store.videoCommentsFor(clip.id);
+                    return _VideoFeedPage(
+                      key: ValueKey('feed-video-${clip.id}'),
+                      clip: clip,
                       store: _store,
-                      target: ModerationTarget(
-                        kind: ModerationKind.post,
-                        key: 'video:${clip.id}',
-                        title: clip.title,
-                        userId: clip.userId,
-                      ),
-                    ),
-                  );
-                },
-              ),
+                      isActive: widget.active && index == activePageIndex,
+                      liked: _likedIds.contains(clip.id),
+                      showBurst: _burstId == clip.id,
+                      onLike: () => _like(clip),
+                      onToggleLike: () => _toggleLike(clip),
+                      onToggleFollow: () {
+                        _toggleFollow(clip);
+                      },
+                      commentCount: comments.length,
+                      onOpenComments: () => _openComments(clip),
+                      onReport: () => _openVideoModeration(clip),
+                    );
+                  },
+                ),
               Positioned(
                 left: 16,
                 right: 16,
@@ -163,7 +231,11 @@ class _ClimbyVideoFeedScreenState extends State<ClimbyVideoFeedScreen> {
                 left: 16,
                 right: 16,
                 bottom: 18,
-                child: _VideoReplyBar(),
+                child: _VideoReplyBar(
+                  onTap: activeClip == null
+                      ? null
+                      : () => _openComments(activeClip),
+                ),
               ),
             ],
           ),
@@ -173,55 +245,196 @@ class _ClimbyVideoFeedScreenState extends State<ClimbyVideoFeedScreen> {
   }
 }
 
-class _VideoFeedPage extends StatelessWidget {
+class _VideoFeedPage extends StatefulWidget {
   const _VideoFeedPage({
+    super.key,
     required this.clip,
     required this.store,
+    required this.isActive,
     required this.liked,
     required this.showBurst,
     required this.onLike,
     required this.onToggleLike,
-    required this.onOpen,
+    required this.onToggleFollow,
+    required this.commentCount,
+    required this.onOpenComments,
     required this.onReport,
   });
 
   final ClimbyVideoClip clip;
   final ClimbySocialStore store;
+  final bool isActive;
   final bool liked;
   final bool showBurst;
   final VoidCallback onLike;
   final VoidCallback onToggleLike;
-  final VoidCallback onOpen;
+  final VoidCallback onToggleFollow;
+  final int commentCount;
+  final VoidCallback onOpenComments;
   final VoidCallback onReport;
 
   @override
-  Widget build(BuildContext context) {
-    final user = store.userById(clip.userId) ?? seedUsers.first;
-    final likeCount = clip.likeCount + (liked ? 1 : 0);
+  State<_VideoFeedPage> createState() => _VideoFeedPageState();
+}
 
-    return GestureDetector(
-      onTap: onOpen,
-      onDoubleTap: onLike,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(clip.coverAsset, fit: BoxFit.cover),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.28),
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.82),
-                ],
+class _VideoFeedPageState extends State<_VideoFeedPage> {
+  late final VideoPlayerController _controller;
+  bool _ready = false;
+  bool _pausedByUser = false;
+  bool _showPlaybackCue = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.asset(widget.clip.videoAsset)
+      ..setLooping(true)
+      ..initialize().then((_) {
+        if (!mounted) {
+          return;
+        }
+        setState(() => _ready = true);
+        _syncPlayback();
+      });
+  }
+
+  @override
+  void didUpdateWidget(covariant _VideoFeedPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isActive != widget.isActive) {
+      if (!widget.isActive) {
+        _pausedByUser = false;
+      }
+      _syncPlayback();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _syncPlayback() {
+    if (!_ready) {
+      return;
+    }
+
+    if (widget.isActive && !_pausedByUser) {
+      _controller.play();
+      if (_showPlaybackCue) {
+        setState(() => _showPlaybackCue = false);
+      }
+      return;
+    }
+
+    _controller.pause();
+  }
+
+  void _togglePlayback() {
+    if (!_ready) {
+      return;
+    }
+
+    final shouldPause = _controller.value.isPlaying;
+    if (shouldPause) {
+      _controller.pause();
+    } else {
+      _controller.play();
+    }
+
+    setState(() {
+      _pausedByUser = shouldPause;
+      _showPlaybackCue = true;
+    });
+
+    if (!shouldPause) {
+      Future<void>.delayed(const Duration(milliseconds: 560), () {
+        if (mounted && _controller.value.isPlaying) {
+          setState(() => _showPlaybackCue = false);
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = widget.store.userById(widget.clip.userId) ?? seedUsers.first;
+    final likeCount = widget.clip.likeCount + (widget.liked ? 1 : 0);
+    final following = widget.store.isFollowing(widget.clip.userId);
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (_ready)
+          FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: _controller.value.size.width,
+              height: _controller.value.size.height,
+              child: VideoPlayer(_controller),
+            ),
+          )
+        else
+          Image.asset(widget.clip.coverAsset, fit: BoxFit.cover),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.28),
+                Colors.transparent,
+                Colors.black.withValues(alpha: 0.82),
+              ],
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: FractionallySizedBox(
+            widthFactor: 1,
+            heightFactor: 0.58,
+            alignment: Alignment.center,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _togglePlayback,
+              onDoubleTap: widget.onLike,
+            ),
+          ),
+        ),
+        IgnorePointer(
+          child: Center(
+            child: AnimatedOpacity(
+              opacity:
+                  _showPlaybackCue ||
+                      (_ready && _pausedByUser && widget.isActive)
+                  ? 1
+                  : 0,
+              duration: const Duration(milliseconds: 160),
+              child: Container(
+                width: 74,
+                height: 74,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.38),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.16),
+                  ),
+                ),
+                child: Icon(
+                  _pausedByUser
+                      ? Icons.play_arrow_rounded
+                      : Icons.pause_rounded,
+                  color: Colors.white,
+                  size: 44,
+                ),
               ),
             ),
           ),
-          Center(
+        ),
+        IgnorePointer(
+          child: Center(
             child: AnimatedOpacity(
-              opacity: showBurst ? 1 : 0,
+              opacity: widget.showBurst ? 1 : 0,
               duration: const Duration(milliseconds: 180),
               child: Image.asset(
                 'assets/images/Hangboard.png',
@@ -231,85 +444,188 @@ class _VideoFeedPage extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            left: 18,
-            right: 72,
-            bottom: 78,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) =>
-                          UserProfileScreen(store: store, user: user),
+        ),
+        Positioned(
+          left: 18,
+          right: 72,
+          bottom: 78,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _VideoFollowAvatar(
+                    asset: user.avatarAsset,
+                    following: following,
+                    onOpenProfile: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            UserProfileScreen(store: widget.store, user: user),
+                      ),
+                    ),
+                    onToggleFollow: widget.onToggleFollow,
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            UserProfileScreen(store: widget.store, user: user),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          user.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _VideoDurationChip(duration: widget.clip.duration),
+                      ],
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _VideoAvatar(asset: user.avatarAsset, size: 42),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0,
-                            ),
-                          ),
-                          Text(
-                            clip.duration,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                widget.clip.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0,
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  clip.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          right: 16,
+          bottom: 86,
+          child: Column(
+            children: [
+              _VideoSideButton(
+                asset: widget.liked
+                    ? 'assets/images/Hangboard.png'
+                    : 'assets/images/Edge.png',
+                label: likeCount.toString(),
+                onTap: widget.onToggleLike,
+              ),
+              const SizedBox(height: 10),
+              _VideoCommentButton(
+                count: widget.commentCount,
+                onTap: widget.onOpenComments,
+              ),
+              const SizedBox(height: 10),
+              _VideoReportButton(onTap: widget.onReport),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _VideoFollowAvatar extends StatelessWidget {
+  const _VideoFollowAvatar({
+    required this.asset,
+    required this.following,
+    required this.onOpenProfile,
+    required this.onToggleFollow,
+  });
+
+  final String asset;
+  final bool following;
+  final VoidCallback onOpenProfile;
+  final VoidCallback onToggleFollow;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 46,
+      height: 46,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          GestureDetector(
+            onTap: onOpenProfile,
+            child: _VideoAvatar(asset: asset, size: 42),
           ),
           Positioned(
-            right: 16,
-            bottom: 86,
-            child: Column(
-              children: [
-                _VideoSideButton(
-                  asset: liked
-                      ? 'assets/images/Hangboard.png'
-                      : 'assets/images/Edge.png',
-                  label: likeCount.toString(),
-                  onTap: onToggleLike,
+            right: -6,
+            bottom: -6,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onToggleFollow,
+              child: SizedBox(
+                width: 30,
+                height: 30,
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 19,
+                    height: 19,
+                    decoration: BoxDecoration(
+                      color: following ? Colors.white : const Color(0xFFD6FF00),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.black, width: 2),
+                    ),
+                    child: Icon(
+                      following ? Icons.check_rounded : Icons.add_rounded,
+                      color: Colors.black,
+                      size: 13,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                _VideoSideButton(
-                  asset: 'assets/images/Beacon.png',
-                  label: 'Report',
-                  onTap: onReport,
-                ),
-              ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VideoDurationChip extends StatelessWidget {
+  const _VideoDurationChip({required this.duration});
+
+  final String duration;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 24,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.schedule_rounded,
+            color: Colors.white.withValues(alpha: 0.76),
+            size: 12,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            _compactDuration(duration),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.86),
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0,
             ),
           ),
         ],
@@ -326,7 +642,7 @@ class _VideoFilterRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const filters = ['For you', 'Following', 'Popular'];
+    const filters = ['All', 'Following', 'Popular'];
     return Row(
       children: [
         for (final filter in filters) ...[
@@ -358,6 +674,22 @@ class _VideoFilterRail extends StatelessWidget {
           const SizedBox(width: 22),
         ],
       ],
+    );
+  }
+}
+
+class _VideoEmptyState extends StatelessWidget {
+  const _VideoEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Image(
+        image: AssetImage('assets/images/Ascent.png'),
+        width: 118,
+        height: 156,
+        fit: BoxFit.contain,
+      ),
     );
   }
 }
@@ -396,35 +728,369 @@ class _VideoSideButton extends StatelessWidget {
   }
 }
 
-class _VideoReplyBar extends StatelessWidget {
+class _VideoCommentButton extends StatelessWidget {
+  const _VideoCommentButton({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1B2021).withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              'Please enter...',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.42),
-                fontWeight: FontWeight.w800,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: 54,
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        decoration: BoxDecoration(
+          color: const Color(0xFF111617).withValues(alpha: 0.52),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.mode_comment_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              count.toString(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
                 letterSpacing: 0,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VideoReportButton extends StatelessWidget {
+  const _VideoReportButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: 54,
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        decoration: BoxDecoration(
+          color: const Color(0xFF111617).withValues(alpha: 0.58),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.28),
+              blurRadius: 14,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD6FF00).withValues(alpha: 0.14),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.flag_rounded,
+                color: Color(0xFFD6FF00),
+                size: 19,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Report',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.88),
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VideoCommentsSheet extends StatelessWidget {
+  const _VideoCommentsSheet({required this.store, required this.clip});
+
+  final ClimbySocialStore store;
+  final ClimbyVideoClip clip;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.54,
+      minChildSize: 0.34,
+      maxChildSize: 0.82,
+      builder: (context, scrollController) {
+        return DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Color(0xFF101415),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          Image.asset(
-            'assets/images/Knot.png',
-            width: 28,
-            height: 28,
-            fit: BoxFit.contain,
+          child: AnimatedBuilder(
+            animation: store,
+            builder: (context, _) {
+              final comments = store.videoCommentsFor(clip.id);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 10),
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 16, 10, 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${comments.length} comments',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                clip.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.56),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: comments.isEmpty
+                        ? ListView(
+                            controller: scrollController,
+                            padding: EdgeInsets.fromLTRB(
+                              18,
+                              28,
+                              18,
+                              bottomInset + 22,
+                            ),
+                            children: const [
+                              Center(
+                                child: Image(
+                                  image: AssetImage('assets/images/Ascent.png'),
+                                  width: 118,
+                                  height: 156,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ],
+                          )
+                        : ListView.separated(
+                            controller: scrollController,
+                            padding: EdgeInsets.fromLTRB(
+                              18,
+                              6,
+                              12,
+                              bottomInset + 22,
+                            ),
+                            itemCount: comments.length,
+                            separatorBuilder: (_, _) => Divider(
+                              height: 18,
+                              color: Colors.white.withValues(alpha: 0.08),
+                              indent: 46,
+                            ),
+                            itemBuilder: (context, index) {
+                              return _VideoCommentTile(
+                                store: store,
+                                comment: comments[index],
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              );
+            },
           ),
-        ],
+        );
+      },
+    );
+  }
+}
+
+class _VideoCommentTile extends StatelessWidget {
+  const _VideoCommentTile({required this.store, required this.comment});
+
+  final ClimbySocialStore store;
+  final ClimbyComment comment;
+
+  @override
+  Widget build(BuildContext context) {
+    final user = store.userById(comment.userId) ?? seedUsers.first;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _VideoAvatar(asset: user.avatarAsset, size: 36),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      user.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    comment.createdLabel,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.42),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 5),
+              Text(
+                comment.text,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.78),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  height: 1.28,
+                  letterSpacing: 0,
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          onPressed: () => openModerationScreen(
+            context: context,
+            store: store,
+            target: ModerationTarget(
+              kind: ModerationKind.comment,
+              key: 'comment:${comment.id}',
+              title: comment.text,
+              userId: comment.userId,
+            ),
+          ),
+          icon: Icon(
+            Icons.flag_rounded,
+            color: Colors.white.withValues(alpha: 0.54),
+            size: 18,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _VideoReplyBar extends StatelessWidget {
+  const _VideoReplyBar({required this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1B2021).withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Please enter...',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.42),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0,
+                ),
+              ),
+            ),
+            Image.asset(
+              'assets/images/Knot.png',
+              width: 28,
+              height: 28,
+              fit: BoxFit.contain,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -470,6 +1136,22 @@ class _ClimbyVideoWatchScreenState extends State<ClimbyVideoWatchScreen> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _openModeration() async {
+    final result = await openModerationScreen(
+      context: context,
+      store: widget.store,
+      target: ModerationTarget(
+        kind: ModerationKind.post,
+        key: 'video:${widget.clip.id}',
+        title: widget.clip.title,
+        userId: widget.clip.userId,
+      ),
+    );
+    if (mounted && result != null) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -531,16 +1213,7 @@ class _ClimbyVideoWatchScreenState extends State<ClimbyVideoWatchScreen> {
                 ),
                 const Spacer(),
                 IconButton(
-                  onPressed: () => openModerationScreen(
-                    context: context,
-                    store: widget.store,
-                    target: ModerationTarget(
-                      kind: ModerationKind.post,
-                      key: 'video:${widget.clip.id}',
-                      title: widget.clip.title,
-                      userId: widget.clip.userId,
-                    ),
-                  ),
+                  onPressed: _openModeration,
                   icon: const Icon(
                     Icons.more_vert_rounded,
                     color: Colors.white,
@@ -649,6 +1322,21 @@ class _ClimbyVideoWatchScreenState extends State<ClimbyVideoWatchScreen> {
       ),
     );
   }
+}
+
+String _compactDuration(String duration) {
+  final parts = duration.split(':');
+  if (parts.length != 2) {
+    return duration;
+  }
+
+  final minutes = int.tryParse(parts.first);
+  final seconds = int.tryParse(parts.last);
+  if (minutes == null || seconds == null) {
+    return duration;
+  }
+
+  return '$minutes:${seconds.toString().padLeft(2, '0')}';
 }
 
 class _VideoAvatar extends StatelessWidget {

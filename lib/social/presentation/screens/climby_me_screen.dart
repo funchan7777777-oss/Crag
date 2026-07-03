@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../access_trail/data/local_crag_access_cache.dart';
 import '../../../access_trail/domain/models/climber_access_card.dart';
@@ -136,7 +137,7 @@ class _ClimbyMeScreenState extends State<ClimbyMeScreen> {
                           value: followingCount.toString(),
                           onTap: () => _openUserList(
                             title: 'Following',
-                            users: _store.followingUsers,
+                            kind: _ProfileUserListKind.following,
                           ),
                         ),
                       ),
@@ -147,7 +148,7 @@ class _ClimbyMeScreenState extends State<ClimbyMeScreen> {
                           value: followerCount.toString(),
                           onTap: () => _openUserList(
                             title: 'Follower',
-                            users: _store.followerUsers,
+                            kind: _ProfileUserListKind.follower,
                           ),
                         ),
                       ),
@@ -172,11 +173,11 @@ class _ClimbyMeScreenState extends State<ClimbyMeScreen> {
                         builder: (_) => const MyWalletScreen(),
                       ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
+                    child: Center(
                       child: Image.asset(
                         'assets/images/Rack.png',
-                        height: 62,
+                        width: 358,
+                        height: 74,
                         fit: BoxFit.fill,
                       ),
                     ),
@@ -234,11 +235,14 @@ class _ClimbyMeScreenState extends State<ClimbyMeScreen> {
     );
   }
 
-  void _openUserList({required String title, required List<ClimbyUser> users}) {
+  void _openUserList({
+    required String title,
+    required _ProfileUserListKind kind,
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) =>
-            ProfileUserListScreen(title: title, users: users, store: _store),
+            _ProfileUserListScreen(title: title, kind: kind, store: _store),
       ),
     );
   }
@@ -295,24 +299,148 @@ class _EditMyProfileScreenState extends State<EditMyProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _pickAvatar() async {
+  Future<void> _chooseAvatarSource() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF101A19),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _AvatarSourceTile(
+                icon: Icons.photo_camera_rounded,
+                label: 'Take a photo',
+                onTap: () => _pickAvatar(ImageSource.camera),
+              ),
+              _AvatarSourceTile(
+                icon: Icons.photo_library_rounded,
+                label: 'Choose from library',
+                onTap: () => _pickAvatar(ImageSource.gallery),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAvatar(ImageSource source) async {
+    Navigator.of(context).pop();
     try {
       final image = await _picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         imageQuality: 88,
+        maxWidth: 1200,
       );
       if (image == null || !mounted) {
         return;
       }
-      setState(() => _avatarFilePath = image.path);
+      final directory = await getApplicationDocumentsDirectory();
+      final extension = image.name.split('.').lastOrNull ?? 'jpg';
+      final stored = await File(image.path).copy(
+        '${directory.path}/crag_profile_avatar_${DateTime.now().millisecondsSinceEpoch}.$extension',
+      );
+      if (mounted) {
+        setState(() => _avatarFilePath = stored.path);
+      }
     } catch (_) {
       if (mounted) {
         await showCragNoticeDialog(
           context: context,
           title: 'Photo not opened',
-          message: 'Please allow photo access, then choose your avatar again.',
+          message:
+              'Please allow camera or photo access, then choose your avatar again.',
         );
       }
+    }
+  }
+
+  Future<void> _chooseGender() async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: const Color(0xFF101A19),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _SelectionTile(
+                label: 'Male',
+                selected: _genderController.text.trim() == 'Male',
+                onTap: () => Navigator.of(context).pop('Male'),
+              ),
+              _SelectionTile(
+                label: 'Female',
+                selected: _genderController.text.trim() == 'Female',
+                onTap: () => Navigator.of(context).pop('Female'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selected != null && mounted) {
+      setState(() => _genderController.text = selected);
+    }
+  }
+
+  Future<void> _chooseAge() async {
+    final currentAge = _ageFromBirthDate(_birthController.text);
+    final ages = List<int>.generate(82, (index) => index + 18);
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: const Color(0xFF101A19),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) {
+        return SizedBox(
+          height: 360,
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(18, 18, 18, 8),
+                child: Text(
+                  'Select age',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: ages.length,
+                  itemBuilder: (context, index) {
+                    final age = ages[index];
+                    return _SelectionTile(
+                      label: '$age',
+                      selected: age == currentAge,
+                      onTap: () => Navigator.of(context).pop(age),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selected != null && mounted) {
+      setState(() => _birthController.text = _birthDateForAge(selected));
     }
   }
 
@@ -367,14 +495,15 @@ class _EditMyProfileScreenState extends State<EditMyProfileScreen> {
             ),
           ),
           ListView(
-            padding: EdgeInsets.fromLTRB(20, topInset + 78, 20, 106),
+            padding: EdgeInsets.fromLTRB(20, topInset + 78, 20, 24),
             children: [
               Center(
                 child: GestureDetector(
-                  onTap: _pickAvatar,
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _chooseAvatarSource,
                   child: SizedBox(
-                    width: 112,
-                    height: 112,
+                    width: 220,
+                    height: 150,
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
@@ -405,12 +534,16 @@ class _EditMyProfileScreenState extends State<EditMyProfileScreen> {
               const SizedBox(height: 22),
               AccessTextField(label: 'Nickname', controller: _nameController),
               const SizedBox(height: 18),
-              AccessTextField(label: 'Gender', controller: _genderController),
+              _ProfileSelectField(
+                label: 'Gender',
+                value: _genderController.text,
+                onTap: _chooseGender,
+              ),
               const SizedBox(height: 18),
-              AccessTextField(
-                label: 'Birth of date',
-                controller: _birthController,
-                keyboardType: TextInputType.datetime,
+              _ProfileSelectField(
+                label: 'Age',
+                value: _ageFromBirthDate(_birthController.text).toString(),
+                onTap: _chooseAge,
               ),
               const SizedBox(height: 18),
               AccessTextField(label: 'City', controller: _cityController),
@@ -420,6 +553,13 @@ class _EditMyProfileScreenState extends State<EditMyProfileScreen> {
                 controller: _bioController,
                 maxLines: 2,
               ),
+              const SizedBox(height: 24),
+              NeonHoldButton(
+                label: 'Continue',
+                busy: _saving,
+                onPressed: _save,
+              ),
+              SizedBox(height: bottomInset + 18),
             ],
           ),
           Positioned(
@@ -452,16 +592,6 @@ class _EditMyProfileScreenState extends State<EditMyProfileScreen> {
                   ),
                 ],
               ),
-            ),
-          ),
-          Positioned(
-            left: 20,
-            right: 20,
-            bottom: bottomInset + 18,
-            child: NeonHoldButton(
-              label: 'Continue',
-              busy: _saving,
-              onPressed: _save,
             ),
           ),
         ],
@@ -659,16 +789,18 @@ class BlacklistScreen extends StatelessWidget {
   }
 }
 
-class ProfileUserListScreen extends StatelessWidget {
-  const ProfileUserListScreen({
+enum _ProfileUserListKind { following, follower }
+
+class _ProfileUserListScreen extends StatelessWidget {
+  const _ProfileUserListScreen({
     required this.title,
-    required this.users,
+    required this.kind,
     required this.store,
     super.key,
   });
 
   final String title;
-  final List<ClimbyUser> users;
+  final _ProfileUserListKind kind;
   final ClimbySocialStore store;
 
   @override
@@ -681,43 +813,160 @@ class ProfileUserListScreen extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
-          users.isEmpty
-              ? const _ProfileEmptyState(message: 'No data')
-              : ListView.separated(
-                  padding: EdgeInsets.fromLTRB(16, topInset + 78, 16, 24),
-                  itemCount: users.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 18),
-                  itemBuilder: (context, index) {
-                    final user = users[index];
-                    return GestureDetector(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) =>
-                              UserProfileScreen(store: store, user: user),
-                        ),
+          AnimatedBuilder(
+            animation: store,
+            builder: (context, _) {
+              final users = switch (kind) {
+                _ProfileUserListKind.following => store.followingUsers,
+                _ProfileUserListKind.follower => store.followerUsers,
+              };
+              if (users.isEmpty) {
+                return const _ProfileEmptyState(message: 'No data');
+              }
+              return ListView.separated(
+                padding: EdgeInsets.fromLTRB(16, topInset + 78, 16, 24),
+                itemCount: users.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 18),
+                itemBuilder: (context, index) {
+                  final user = users[index];
+                  final isFollowing = store.isFollowing(user.id);
+                  return _ProfileUserListRow(
+                    user: user,
+                    isFollowing: isFollowing,
+                    isFollowerList: kind == _ProfileUserListKind.follower,
+                    onProfileTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            UserProfileScreen(store: store, user: user),
                       ),
-                      child: Row(
-                        children: [
-                          _UserAvatar(asset: user.avatarAsset, size: 50),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              user.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                    ),
+                    onFollowTap: () => store.toggleFollow(user.id),
+                  );
+                },
+              );
+            },
+          ),
           _SimpleTopBar(title: title, topInset: topInset),
         ],
+      ),
+    );
+  }
+}
+
+class _ProfileUserListRow extends StatelessWidget {
+  const _ProfileUserListRow({
+    required this.user,
+    required this.isFollowing,
+    required this.isFollowerList,
+    required this.onProfileTap,
+    required this.onFollowTap,
+  });
+
+  final ClimbyUser user;
+  final bool isFollowing;
+  final bool isFollowerList;
+  final VoidCallback onProfileTap;
+  final VoidCallback onFollowTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final actionLabel = isFollowing
+        ? 'Unfollow'
+        : isFollowerList
+        ? 'Follow Back'
+        : 'Follow';
+
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onProfileTap,
+            child: Row(
+              children: [
+                _UserAvatar(asset: user.avatarAsset, size: 50),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        user.bio,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.54),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        _ProfileFollowActionButton(
+          label: actionLabel,
+          highlighted: !isFollowing,
+          onTap: onFollowTap,
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileFollowActionButton extends StatelessWidget {
+  const _ProfileFollowActionButton({
+    required this.label,
+    required this.highlighted,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool highlighted;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: 104,
+        height: 38,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: highlighted ? const Color(0xFFD6FF00) : Colors.transparent,
+          borderRadius: BorderRadius.circular(19),
+          border: Border.all(color: const Color(0xFFD6FF00), width: 1.4),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: highlighted ? Colors.black : const Color(0xFFD6FF00),
+            fontSize: label.length > 9 ? 11 : 12,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0,
+          ),
+        ),
       ),
     );
   }
@@ -764,6 +1013,174 @@ class MyPostsScreen extends StatelessWidget {
           ),
           _SimpleTopBar(title: 'My Post', topInset: topInset),
         ],
+      ),
+    );
+  }
+}
+
+class _AvatarSourceTile extends StatelessWidget {
+  const _AvatarSourceTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        height: 58,
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF172221),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFFD6FF00), size: 24),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileSelectField extends StatelessWidget {
+  const _ProfileSelectField({
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0,
+          ),
+        ),
+        const SizedBox(height: 9),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            height: 64,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF151F20).withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Color(0xFFD6FF00),
+                  size: 24,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SelectionTile extends StatelessWidget {
+  const _SelectionTile({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        height: 54,
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: selected
+              ? const Color(0xFFD6FF00).withValues(alpha: 0.16)
+              : const Color(0xFF172221),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected
+                ? const Color(0xFFD6FF00)
+                : Colors.white.withValues(alpha: 0.08),
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0,
+                ),
+              ),
+            ),
+            if (selected)
+              const Icon(
+                Icons.check_rounded,
+                color: Color(0xFFD6FF00),
+                size: 22,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1542,7 +1959,11 @@ String _genderSymbol(ClimberAccessCard card) {
 }
 
 int _age(ClimberAccessCard card) {
-  final birth = DateTime.tryParse(card.birthDate ?? '');
+  return _ageFromBirthDate(card.birthDate ?? '');
+}
+
+int _ageFromBirthDate(String birthDate) {
+  final birth = DateTime.tryParse(birthDate);
   if (birth == null) {
     return 22;
   }
@@ -1553,6 +1974,12 @@ int _age(ClimberAccessCard card) {
     age -= 1;
   }
   return age.clamp(13, 99);
+}
+
+String _birthDateForAge(int age) {
+  final now = DateTime.now();
+  final year = now.year - age;
+  return '${year.toString().padLeft(4, '0')}-01-01';
 }
 
 const _defaultAvatarAsset = 'assets/images/head/avatar_male_alex.jpg';

@@ -22,6 +22,11 @@ class AccessTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveMaxLines = obscureText ? 1 : maxLines;
+    final effectiveMinLines = effectiveMaxLines > 1
+        ? (effectiveMaxLines >= 4 ? 4 : effectiveMaxLines)
+        : 1;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -39,8 +44,8 @@ class AccessTextField extends StatelessWidget {
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
-          maxLines: obscureText ? 1 : maxLines,
-          minLines: maxLines > 1 ? 4 : 1,
+          maxLines: effectiveMaxLines,
+          minLines: effectiveMinLines,
           cursorColor: const Color(0xFFD6FF00),
           style: const TextStyle(
             color: Colors.white,

@@ -14,7 +14,6 @@ class ClimbyMessagesScreen extends StatefulWidget {
 
 class _ClimbyMessagesScreenState extends State<ClimbyMessagesScreen> {
   final _store = ClimbySocialStore.instance;
-  String _filter = 'All';
 
   @override
   void initState() {
@@ -31,7 +30,9 @@ class _ClimbyMessagesScreenState extends State<ClimbyMessagesScreen> {
       child: AnimatedBuilder(
         animation: _store,
         builder: (context, _) {
-          final users = _usersForFilter();
+          final conversationUsers = _conversationUsers();
+          final systemUsers = _systemMessageUsers();
+          final itemCount = conversationUsers.length + systemUsers.length;
           return Padding(
             padding: EdgeInsets.fromLTRB(14, topInset + 10, 14, 0),
             child: Column(
@@ -62,38 +63,37 @@ class _ClimbyMessagesScreenState extends State<ClimbyMessagesScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                _MessageFilterTabs(
-                  active: _filter,
-                  onChanged: (filter) => setState(() => _filter = filter),
-                ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 14),
                 Expanded(
-                  child: users.isEmpty
+                  child: itemCount == 0
                       ? const _MessagesEmptyState()
                       : ListView.separated(
                           padding: const EdgeInsets.fromLTRB(0, 0, 0, 18),
-                          itemCount: users.length,
+                          itemCount: itemCount,
                           separatorBuilder: (_, _) => Divider(
                             height: 1,
                             color: Colors.white.withValues(alpha: 0.08),
                             indent: 58,
                           ),
                           itemBuilder: (context, index) {
-                            final user = users[index];
+                            if (index >= conversationUsers.length) {
+                              final user =
+                                  systemUsers[index - conversationUsers.length];
+                              return _SystemMessageRow(
+                                user: user,
+                                onTap: () => _openProfile(user),
+                                onFollowBack: () =>
+                                    _store.toggleFollow(user.id),
+                              );
+                            }
+
+                            final user = conversationUsers[index];
                             final messages = _store.messagesFor(user.id);
                             return _MessageConversationRow(
                               user: user,
                               messages: messages,
-                              following: _store.isFollowing(user.id),
-                              mutual: _store.isMutualFollow(user.id),
-                              showFollow: _filter == 'Popular',
-                              onTap: () => _filter == 'Popular'
-                                  ? _openProfile(user)
-                                  : _openChat(user),
+                              onTap: () => _openChat(user),
                               onAvatarTap: () => _openProfile(user),
-                              onToggleFollow: () =>
-                                  _store.toggleFollow(user.id),
                               onReport: () => openModerationScreen(
                                 context: context,
                                 store: _store,
@@ -117,54 +117,34 @@ class _ClimbyMessagesScreenState extends State<ClimbyMessagesScreen> {
   }
 
   List<ClimbyUser> _storyUsers() {
-    final users = _store.visibleUsers
-        .where((user) => !_store.isUserBlocked(user.id))
+    final users = _store.followerUsers
+        .where((user) => _store.isMutualFollow(user.id))
         .toList(growable: false);
     return users.take(8).toList(growable: false);
   }
 
-  List<ClimbyUser> _usersForFilter() {
+  List<ClimbyUser> _conversationUsers() {
     final users = _store.visibleUsers
-        .where((user) => !_store.isUserBlocked(user.id))
+        .where((user) => _store.messagesFor(user.id).isNotEmpty)
         .toList(growable: false);
-
-    if (_filter == 'Following') {
-      return users
-          .where((user) => _store.isFollowing(user.id))
-          .toList(growable: false);
-    }
-    if (_filter == 'Popular') {
-      final sorted = [...users]
-        ..sort((a, b) => _activityScore(b).compareTo(_activityScore(a)));
-      return sorted.take(10).toList(growable: false);
-    }
-
-    final withMessages = users.where((user) {
-      return _store.messagesFor(user.id).isNotEmpty ||
-          _store.isMutualFollow(user.id);
-    }).toList();
-    withMessages.sort((a, b) {
+    users.sort((a, b) {
       final aTime = _lastMessageTime(a.id);
       final bTime = _lastMessageTime(b.id);
       return bTime.compareTo(aTime);
     });
-    return withMessages;
+    return users;
   }
 
-  int _activityScore(ClimbyUser user) {
-    final postScore =
-        _store
-            .visiblePosts()
-            .where((post) => post.userId == user.id)
-            .fold<int>(0, (sum, post) => sum + post.likeCount) +
-        user.age;
-    return postScore;
+  List<ClimbyUser> _systemMessageUsers() {
+    return _store.followerUsers
+        .where((user) => !_store.isFollowing(user.id))
+        .toList(growable: false);
   }
 
   int _lastMessageTime(String userId) {
     final messages = _store.messagesFor(userId);
     if (messages.isEmpty) {
-      return _store.isMutualFollow(userId) ? 1 : 0;
+      return 0;
     }
     final parsed = DateTime.tryParse(messages.last.createdIso);
     return parsed?.millisecondsSinceEpoch ?? 0;
@@ -207,44 +187,10 @@ class AddFriendScreen extends StatelessWidget {
               color: Colors.black.withValues(alpha: 0.18),
             ),
           ),
-          Positioned(
-            left: 12,
-            right: 12,
-            top: topInset + 2,
-            child: SizedBox(
-              height: 50,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(
-                        Icons.arrow_back_rounded,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const Text(
-                    'Add Friend',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
           AnimatedBuilder(
             animation: store,
             builder: (context, _) {
-              final users = store.visibleUsers
-                  .where((user) => !store.isUserBlocked(user.id))
-                  .toList(growable: false);
+              final users = store.followerUsers;
               return ListView.separated(
                 padding: EdgeInsets.fromLTRB(16, topInset + 70, 16, 24),
                 itemCount: users.length,
@@ -265,6 +211,38 @@ class AddFriendScreen extends StatelessWidget {
                 },
               );
             },
+          ),
+          Positioned(
+            left: 12,
+            right: 12,
+            top: topInset + 2,
+            child: SizedBox(
+              height: 50,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      icon: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    'Add Friend',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -362,75 +340,19 @@ class _MessageStoryAvatar extends StatelessWidget {
   }
 }
 
-class _MessageFilterTabs extends StatelessWidget {
-  const _MessageFilterTabs({required this.active, required this.onChanged});
-
-  final String active;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    const tabs = ['All', 'Following', 'Popular'];
-    return Row(
-      children: [
-        for (final tab in tabs) ...[
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => onChanged(tab),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tab,
-                    style: TextStyle(
-                      color: active == tab
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.48),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  SizedBox(
-                    width: active == tab ? 32 : 0,
-                    height: 3,
-                    child: const ColoredBox(color: Color(0xFFD6FF00)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 24),
-        ],
-      ],
-    );
-  }
-}
-
 class _MessageConversationRow extends StatelessWidget {
   const _MessageConversationRow({
     required this.user,
     required this.messages,
-    required this.following,
-    required this.mutual,
-    required this.showFollow,
     required this.onTap,
     required this.onAvatarTap,
-    required this.onToggleFollow,
     required this.onReport,
   });
 
   final ClimbyUser user;
   final List<ClimbyMessage> messages;
-  final bool following;
-  final bool mutual;
-  final bool showFollow;
   final VoidCallback onTap;
   final VoidCallback onAvatarTap;
-  final VoidCallback onToggleFollow;
   final VoidCallback onReport;
 
   @override
@@ -490,18 +412,15 @@ class _MessageConversationRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            if (showFollow)
-              _FollowActionButton(following: following, onTap: onToggleFollow)
-            else
-              Text(
-                _lastMessageLabel(),
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.58),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0,
-                ),
+            Text(
+              _lastMessageLabel(),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.58),
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0,
               ),
+            ),
             IconButton(
               constraints: const BoxConstraints.tightFor(width: 32, height: 40),
               padding: EdgeInsets.zero,
@@ -522,18 +441,12 @@ class _MessageConversationRow extends StatelessWidget {
     if (messages.isNotEmpty) {
       return messages.last.text;
     }
-    if (mutual) {
-      return 'Ready to chat after the next send.';
-    }
-    if (following) {
-      return 'Waiting for follow back to unlock chat.';
-    }
-    return user.bio;
+    return '';
   }
 
   String _lastMessageLabel() {
     if (messages.isEmpty) {
-      return mutual ? 'Start' : '';
+      return '';
     }
     final parsed = DateTime.tryParse(messages.last.createdIso)?.toLocal();
     if (parsed == null) {
@@ -545,11 +458,95 @@ class _MessageConversationRow extends StatelessWidget {
   }
 }
 
+class _SystemMessageRow extends StatelessWidget {
+  const _SystemMessageRow({
+    required this.user,
+    required this.onTap,
+    required this.onFollowBack,
+  });
+
+  final ClimbyUser user;
+  final VoidCallback onTap;
+  final VoidCallback onFollowBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD6FF00).withValues(alpha: 0.18),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.notifications_rounded,
+                color: Color(0xFFD6FF00),
+                size: 24,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: onTap,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'System',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${user.name} started following you',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.56),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          _FollowActionButton(
+            following: false,
+            onTap: onFollowBack,
+            followLabel: 'Follow Back',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _FollowActionButton extends StatelessWidget {
-  const _FollowActionButton({required this.following, required this.onTap});
+  const _FollowActionButton({
+    required this.following,
+    required this.onTap,
+    this.followLabel,
+  });
 
   final bool following;
   final VoidCallback onTap;
+  final String? followLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -575,11 +572,30 @@ class _FollowActionButton extends StatelessWidget {
                 ),
               ),
             )
-          : Image.asset(
+          : followLabel == null
+          ? Image.asset(
               'assets/images/Flash.png',
               width: 86,
               height: 34,
               fit: BoxFit.fill,
+            )
+          : Container(
+              width: 104,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD6FF00),
+                borderRadius: BorderRadius.circular(17),
+              ),
+              child: Text(
+                followLabel!,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0,
+                ),
+              ),
             ),
     );
   }
@@ -599,16 +615,6 @@ class _MessagesEmptyState extends StatelessWidget {
             width: 118,
             height: 156,
             fit: BoxFit.contain,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'No data',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.74),
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0,
-            ),
           ),
         ],
       ),
@@ -679,7 +685,11 @@ class _AddFriendRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        _FollowActionButton(following: following, onTap: onToggleFollow),
+        _FollowActionButton(
+          following: following,
+          onTap: onToggleFollow,
+          followLabel: 'Follow Back',
+        ),
       ],
     );
   }

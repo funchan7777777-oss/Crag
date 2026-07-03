@@ -4,13 +4,15 @@ import '../../../access_trail/presentation/widgets/crag_image_backdrop.dart';
 import '../../../access_trail/presentation/widgets/crag_notice_dialog.dart';
 import '../../data/climby_social_store.dart';
 
-Future<void> openModerationScreen({
+enum ModerationResult { reported, blocked }
+
+Future<ModerationResult?> openModerationScreen({
   required BuildContext context,
   required ClimbySocialStore store,
   required ModerationTarget target,
 }) {
-  return Navigator.of(context).push(
-    MaterialPageRoute<void>(
+  return Navigator.of(context).push<ModerationResult>(
+    MaterialPageRoute<ModerationResult>(
       builder: (_) => ModerationReportScreen(store: store, target: target),
     ),
   );
@@ -61,7 +63,7 @@ class _ModerationReportScreenState extends State<ModerationReportScreen> {
       message: 'Thanks for helping keep the climbing community clean.',
     );
     if (mounted) {
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(ModerationResult.reported);
     }
   }
 
@@ -76,7 +78,7 @@ class _ModerationReportScreenState extends State<ModerationReportScreen> {
       message: 'This content will no longer appear in your local experience.',
     );
     if (mounted) {
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(ModerationResult.blocked);
     }
   }
 

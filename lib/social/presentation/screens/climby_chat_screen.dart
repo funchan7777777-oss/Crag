@@ -75,6 +75,22 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
     );
   }
 
+  Future<void> _openModeration() async {
+    final result = await openModerationScreen(
+      context: context,
+      store: widget.store,
+      target: ModerationTarget(
+        kind: ModerationKind.user,
+        key: 'user:${widget.user.id}',
+        title: widget.user.name,
+        userId: widget.user.id,
+      ),
+    );
+    if (mounted && result != null) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
@@ -151,16 +167,7 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
                   icon: const Icon(Icons.videocam_rounded, color: Colors.white),
                 ),
                 IconButton(
-                  onPressed: () => openModerationScreen(
-                    context: context,
-                    store: widget.store,
-                    target: ModerationTarget(
-                      kind: ModerationKind.user,
-                      key: 'user:${widget.user.id}',
-                      title: widget.user.name,
-                      userId: widget.user.id,
-                    ),
-                  ),
+                  onPressed: _openModeration,
                   icon: const Icon(
                     Icons.more_vert_rounded,
                     color: Colors.white,
