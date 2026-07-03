@@ -91,6 +91,22 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
     }
   }
 
+  Future<void> _openUserProfile() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            UserProfileScreen(store: widget.store, user: widget.user),
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+    if (widget.store.isUserBlocked(widget.user.id) ||
+        widget.store.isReported('user:${widget.user.id}')) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
@@ -121,14 +137,7 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => UserProfileScreen(
-                        store: widget.store,
-                        user: widget.user,
-                      ),
-                    ),
-                  ),
+                  onTap: _openUserProfile,
                   child: ClipOval(
                     child: Image.asset(
                       widget.user.avatarAsset,
@@ -141,14 +150,7 @@ class _ClimbyChatScreenState extends State<ClimbyChatScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => UserProfileScreen(
-                          store: widget.store,
-                          user: widget.user,
-                        ),
-                      ),
-                    ),
+                    onTap: _openUserProfile,
                     child: Text(
                       widget.user.name,
                       maxLines: 1,

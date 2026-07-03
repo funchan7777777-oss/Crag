@@ -261,6 +261,7 @@ class ClimbySocialStore extends ChangeNotifier {
     required List<String> imagePaths,
     required String caption,
     required String category,
+    bool boosted = false,
   }) async {
     await load();
     final trimmed = caption.trim();
@@ -279,7 +280,7 @@ class ClimbySocialStore extends ChangeNotifier {
         caption: trimmed,
         category: category,
         createdIso: DateTime.now().toIso8601String(),
-        status: 'reviewing',
+        status: boosted ? 'boosted' : 'reviewing',
       ),
     );
     await _writePendingPosts();

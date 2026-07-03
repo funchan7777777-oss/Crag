@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../access_trail/presentation/widgets/crag_notice_dialog.dart';
 import '../../data/climby_social_store.dart';
+import '../../data/climby_wallet_store.dart';
+import 'climby_wallet_screen.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({required this.store, super.key});
@@ -20,6 +22,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final _picker = ImagePicker();
   final List<String> _imagePaths = [];
   String _category = 'Bouldering';
+  bool _spotlightBoost = false;
   bool _submitting = false;
 
   static const _categories = ['Bouldering', 'Outdoor', 'Training', 'Video'];

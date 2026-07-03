@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../../../field_notes/presentation/screens/crag_home_tabs_screen.dart';
 import '../../data/climby_social_store.dart';
+import '../../data/climby_wallet_store.dart';
 import 'climby_chat_screen.dart';
 import 'climby_create_post_screen.dart';
+import 'climby_wallet_screen.dart';
 import 'climby_video_call_screen.dart';
 import 'moderation_report_screen.dart';
 
@@ -332,6 +334,11 @@ class _FeatureDock extends StatelessWidget {
         label: 'Climbing\nSpots',
         asset: 'assets/images/Dyno.png',
         onTap: () => _push(context, PopularSpotsScreen(store: store)),
+      ),
+      _HomeFeature(
+        label: 'Crux\nRadar',
+        asset: 'assets/images/Beacon.png',
+        onTap: () => _push(context, const CruxRadarScreen()),
       ),
       _HomeFeature(
         label: 'AI Coach',
@@ -969,6 +976,8 @@ class SpotDetailScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
+              _SpotDeepCard(spot: spot),
+              const SizedBox(height: 12),
               const _SpotInfoPanel(
                 title: 'Good for',
                 child: Wrap(
@@ -1058,6 +1067,144 @@ class _SpotDetailStat extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SpotDeepCard extends StatelessWidget {
+  const _SpotDeepCard({required this.spot});
+
+  final ClimbySpot spot;
+
+  @override
+  Widget build(BuildContext context) {
+    final wallet = ClimbyWalletStore.instance;
+    final unlockKey = '${spotDeepCardFeature.id}:${spot.id}';
+
+    return AnimatedBuilder(
+      animation: wallet,
+      builder: (context, _) {
+        final unlocked = wallet.isUnlocked(unlockKey);
+        return _SpotInfoPanel(
+          title: 'Deep Card',
+          child: unlocked
+              ? _UnlockedSpotDeepCard(spot: spot)
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Unlock a private read on timing, warmup order, and approach warnings for this spot.',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.76),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        height: 1.32,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => unlockWithCoinsOrOpenWallet(
+                        context: context,
+                        feature: spotDeepCardFeature,
+                        unlockKey: unlockKey,
+                      ),
+                      child: Container(
+                        height: 46,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD6FF00),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Unlock 60 coins',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+        );
+      },
+    );
+  }
+}
+
+class _UnlockedSpotDeepCard extends StatelessWidget {
+  const _UnlockedSpotDeepCard({required this.spot});
+
+  final ClimbySpot spot;
+
+  @override
+  Widget build(BuildContext context) {
+    final seed = spot.id.codeUnits.fold<int>(0, (sum, unit) => sum + unit);
+    final windows = [
+      'Best window: first 90 minutes after opening, before the main partner wave.',
+      'Best window: late afternoon, when the wall cools and slab rubber feels sharper.',
+      'Best window: weekday lunch gap, especially for repeated crux burns.',
+    ];
+    final warmups = [
+      'Warmup: two easy traverses, one silent-feet lap, then one route in ${spot.style}.',
+      'Warmup: open hips on vertical jugs, then rehearse downclimb positions.',
+      'Warmup: ten controlled foot swaps and one low pump lap before projecting.',
+    ];
+    final warnings = [
+      'Watch for crowd spillover near pads; call landing lanes before hard attempts.',
+      'Approach note: keep the first lap conservative until holds feel fully chalked.',
+      'Risk cue: avoid max attempts when the warmup wall is already packed.',
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _DeepCardLine(icon: Icons.schedule_rounded, text: windows[seed % 3]),
+        const SizedBox(height: 10),
+        _DeepCardLine(
+          icon: Icons.fitness_center_rounded,
+          text: warmups[(seed + 1) % 3],
+        ),
+        const SizedBox(height: 10),
+        _DeepCardLine(
+          icon: Icons.warning_amber_rounded,
+          text: warnings[(seed + 2) % 3],
+        ),
+      ],
+    );
+  }
+}
+
+class _DeepCardLine extends StatelessWidget {
+  const _DeepCardLine({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: const Color(0xFFD6FF00), size: 18),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.78),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              height: 1.3,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1866,7 +2013,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             children: [
               if (user != null)
                 GestureDetector(
-                  onTap: () => _openProfile(context, widget.store, user),
+                  onTap: () => _openProfile(
+                    context,
+                    widget.store,
+                    user,
+                    popOnHidden: true,
+                  ),
                   child: Row(
                     children: [
                       _Avatar(asset: user.avatarAsset, size: 54),
@@ -2309,6 +2461,331 @@ class AiCoachScreen extends StatefulWidget {
 
   @override
   State<AiCoachScreen> createState() => _AiCoachScreenState();
+}
+
+class CruxRadarScreen extends StatefulWidget {
+  const CruxRadarScreen({super.key});
+
+  @override
+  State<CruxRadarScreen> createState() => _CruxRadarScreenState();
+}
+
+class _CruxRadarScreenState extends State<CruxRadarScreen> {
+  final _wallet = ClimbyWalletStore.instance;
+  String _style = 'Overhang';
+  String _grade = 'V4-V5';
+  String? _result;
+
+  static const _styles = ['Overhang', 'Slab', 'Lead', 'Dyno'];
+  static const _grades = ['V2-V3', 'V4-V5', 'V6-V7', '5.10', '5.11', '5.12'];
+
+  @override
+  void initState() {
+    super.initState();
+    _wallet.load();
+  }
+
+  Future<void> _runScan() async {
+    final paid = await spendCoinsOrOpenWallet(
+      context: context,
+      feature: cruxRadarFeature,
+    );
+    if (!mounted || !paid) {
+      return;
+    }
+    setState(() {
+      _result = _radarRead(style: _style, grade: _grade);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
+
+    return _CliffScreenFrame(
+      title: 'Crux Radar',
+      backgroundAsset: 'assets/images/Vibe.png',
+      backgroundFit: BoxFit.fill,
+      child: ListView(
+        padding: EdgeInsets.fromLTRB(16, topInset + 72, 16, 28),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF121819).withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFD6FF00), width: 1.2),
+            ),
+            child: Row(
+              children: [
+                Image.asset(
+                  'assets/images/Beacon.png',
+                  width: 66,
+                  height: 66,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Movement scan',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        'Burn 80 coins to map one crux into body cue, risk cue, and send plan.',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.64),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _RadarChooser(
+            title: 'Wall style',
+            values: _styles,
+            active: _style,
+            onChanged: (value) => setState(() => _style = value),
+          ),
+          const SizedBox(height: 14),
+          _RadarChooser(
+            title: 'Grade band',
+            values: _grades,
+            active: _grade,
+            onChanged: (value) => setState(() => _grade = value),
+          ),
+          const SizedBox(height: 16),
+          AnimatedBuilder(
+            animation: _wallet,
+            builder: (context, _) {
+              return Row(
+                children: [
+                  Expanded(
+                    child: _RadarBalanceChip(balance: _wallet.balance),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _runScan,
+                      child: Container(
+                        height: 50,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD6FF00),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Run 80',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: _result == null
+                ? const _RadarEmptyPanel()
+                : _RadarResultPanel(result: _result!),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RadarChooser extends StatelessWidget {
+  const _RadarChooser({
+    required this.title,
+    required this.values,
+    required this.active,
+    required this.onChanged,
+  });
+
+  final String title;
+  final List<String> values;
+  final String active;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final value in values)
+              GestureDetector(
+                onTap: () => onChanged(value),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 13,
+                    vertical: 9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: value == active
+                        ? const Color(0xFFD6FF00)
+                        : const Color(0xFF151A1B),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: value == active
+                          ? const Color(0xFFD6FF00)
+                          : Colors.white.withValues(alpha: 0.12),
+                    ),
+                  ),
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      color: value == active ? Colors.black : Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _RadarBalanceChip extends StatelessWidget {
+  const _RadarBalanceChip({required this.balance});
+
+  final int balance;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151A1B).withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        children: [
+          Image.asset(
+            'assets/images/Quickdraw.png',
+            width: 28,
+            height: 28,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '$balance coins',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RadarEmptyPanel extends StatelessWidget {
+  const _RadarEmptyPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const ValueKey('radar-empty'),
+      height: 154,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: const Color(0xFF101516).withValues(alpha: 0.86),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Text(
+        'No scan yet. Pick the wall and fire the radar.',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.62),
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0,
+        ),
+      ),
+    );
+  }
+}
+
+class _RadarResultPanel extends StatelessWidget {
+  const _RadarResultPanel({required this.result});
+
+  final String result;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: ValueKey(result),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF101516).withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFF6A1D), width: 1.2),
+      ),
+      child: Text(
+        result,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          height: 1.35,
+          letterSpacing: 0,
+        ),
+      ),
+    );
+  }
 }
 
 class _ProfilePostStrip extends StatelessWidget {
@@ -2911,12 +3388,44 @@ void _push(BuildContext context, Widget screen) {
   Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
 }
 
-void _openProfile(
+Future<void> _openProfile(
   BuildContext context,
   ClimbySocialStore store,
-  ClimbyUser user,
-) {
-  _push(context, UserProfileScreen(store: store, user: user));
+  ClimbyUser user, {
+  bool popOnHidden = false,
+}) async {
+  await Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => UserProfileScreen(store: store, user: user),
+    ),
+  );
+  if (!popOnHidden || !context.mounted) {
+    return;
+  }
+  if (store.isUserBlocked(user.id) || store.isReported('user:${user.id}')) {
+    Navigator.of(context).pop();
+  }
+}
+
+String _radarRead({required String style, required String grade}) {
+  final bodyCue = switch (style) {
+    'Slab' => 'Stand taller than feels natural and let the outside edge settle before your hand moves.',
+    'Lead' => 'Build the clip stance first: hips in, elbow soft, then breathe before reaching for rope.',
+    'Dyno' => 'Load through both feet for one quiet beat; jump from hips, not from bent arms.',
+    _ => 'Pull with toes before hands. Keep hips close, then release the next hand late.',
+  };
+  final riskCue = switch (grade) {
+    'V6-V7' || '5.12' => 'Limit burns to three high-quality attempts; fatigue will hide the real beta.',
+    'V2-V3' || '5.10' => 'Do not rush the easy section. Most falls here come from casual feet.',
+    _ => 'Rest long enough that your first move feels crisp, not just possible.',
+  };
+  final sendPlan = switch (style) {
+    'Slab' => 'Plan: rehearse feet from the ground, climb once silently, then commit to one no-adjustment go.',
+    'Lead' => 'Plan: mark clipping holds, preview rests, and call the crux clip before leaving the ground.',
+    'Dyno' => 'Plan: test distance, test launch feet, then make three identical jumps.',
+    _ => 'Plan: split the roof into entry tension, crux reach, and exit reset. Win one section at a time.',
+  };
+  return 'Crux Radar $grade / $style\n\nBody cue: $bodyCue\n\nRisk cue: $riskCue\n\nSend plan: $sendPlan';
 }
 
 void _openPost(BuildContext context, ClimbySocialStore store, ClimbyPost post) {

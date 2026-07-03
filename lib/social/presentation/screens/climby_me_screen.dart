@@ -15,6 +15,7 @@ import '../../../access_trail/presentation/widgets/crag_notice_dialog.dart';
 import '../../../access_trail/presentation/widgets/neon_hold_button.dart';
 import '../../data/climby_social_store.dart';
 import 'climby_home_screen.dart';
+import 'climby_wallet_screen.dart';
 
 class ClimbyMeScreen extends StatefulWidget {
   const ClimbyMeScreen({super.key});
@@ -1186,99 +1187,6 @@ class _SelectionTile extends StatelessWidget {
   }
 }
 
-class MyWalletScreen extends StatelessWidget {
-  const MyWalletScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final topInset = MediaQuery.paddingOf(context).top;
-    const packages = [
-      ('500', '\$9.99'),
-      ('1200', '\$19.99'),
-      ('2600', '\$39.99'),
-      ('5200', '\$69.99'),
-    ];
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset('assets/images/Vibe.png', fit: BoxFit.fill),
-          ListView(
-            padding: EdgeInsets.fromLTRB(16, topInset + 76, 16, 24),
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Coins Power',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Your Climb +',
-                          style: TextStyle(
-                            color: Color(0xFFD6FF00),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Image.asset(
-                    'assets/images/Quickdraw.png',
-                    width: 96,
-                    height: 96,
-                    fit: BoxFit.contain,
-                  ),
-                ],
-              ),
-              Text(
-                'Use coins to unlock premium features, connect with climbers, and level up your experience.',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.66),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  height: 1.35,
-                  letterSpacing: 0,
-                ),
-              ),
-              const SizedBox(height: 22),
-              const Text(
-                'Choose a coin Package',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0,
-                ),
-              ),
-              const SizedBox(height: 12),
-              for (final pack in packages) ...[
-                _CoinPackageRow(coins: pack.$1, price: pack.$2),
-                const SizedBox(height: 12),
-              ],
-            ],
-          ),
-          _SimpleTopBar(title: 'My Wallet', topInset: topInset),
-        ],
-      ),
-    );
-  }
-}
-
 class CommunityGuidelinesScreen extends StatelessWidget {
   const CommunityGuidelinesScreen({super.key});
 
@@ -1734,58 +1642,6 @@ class _SettingRow extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _CoinPackageRow extends StatelessWidget {
-  const _CoinPackageRow({required this.coins, required this.price});
-
-  final String coins;
-  final String price;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF141418).withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(9),
-        border: Border.all(
-          color: const Color(0xFFD6FF00).withValues(alpha: 0.36),
-        ),
-      ),
-      child: Row(
-        children: [
-          Image.asset(
-            'assets/images/Quickdraw.png',
-            width: 32,
-            height: 32,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(width: 14),
-          Text(
-            coins,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            price,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0,
-            ),
-          ),
-        ],
       ),
     );
   }

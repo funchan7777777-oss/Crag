@@ -1154,6 +1154,22 @@ class _ClimbyVideoWatchScreenState extends State<ClimbyVideoWatchScreen> {
     }
   }
 
+  Future<void> _openUserProfile(ClimbyUser user) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => UserProfileScreen(store: widget.store, user: user),
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+    if (widget.store.isUserBlocked(user.id) ||
+        widget.store.isReported('user:${user.id}') ||
+        widget.store.isReported('video:${widget.clip.id}')) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
@@ -1230,12 +1246,7 @@ class _ClimbyVideoWatchScreenState extends State<ClimbyVideoWatchScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) =>
-                          UserProfileScreen(store: widget.store, user: user),
-                    ),
-                  ),
+                  onTap: () => _openUserProfile(user),
                   child: Row(
                     children: [
                       _VideoAvatar(asset: user.avatarAsset, size: 42),
